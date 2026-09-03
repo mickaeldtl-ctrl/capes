@@ -1,5 +1,7 @@
 const SPREADSHEET_ID = "1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o";
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`;
+
+// Utilisation de l'API Viz de Google Sheets pour éviter les erreurs de formatage CSV
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
 
 let allCards = [];
 let filteredCards = [];
@@ -22,27 +24,33 @@ const searchInput = document.getElementById('searchInput');
 
 // Téléchargement des données
 fetch(SHEET_URL)
-  .then(res => {
-    if (!res.ok) throw new Error("Erreur de chargement");
-    return res.text();
-  })
-  .then(csvText => {
-    const lines = csvText.trim().split('\n');
-    if (lines.length <= 1) {
+  .then(res => res.text())
+  .then(text => {
+    // Nettoyage de la réponse JSONP transmise par Google
+    const jsonString = text.substring(47, text.length - 2);
+    const data = JSON.parse(jsonString);
+    const rows = data.table.rows;
+
+    if (!rows || rows.length === 0) {
       loadingEl.textContent = "Aucune donnée trouvée dans le Google Sheet.";
       return;
     }
 
-    // Parser CSV
-    allCards = lines.slice(1).map(line => {
-      const cols = line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/);
+    // Extrait les colonnes du tableau
+    allCards = rows.map(row => {
+      const c = row.c;
       return {
-        q: cols[0] ? cols[0].replace(/^"|"$/g, '').trim() : '',
-        lecon: cols[1] ? cols[1].replace(/^"|"$/g, '').trim() : '',
-        r: cols[2] ? cols[2].replace(/^"|"$/g, '').trim() : '',
-        video: cols[4] ? cols[4].replace(/^"|"$/g, '').trim() : ''
+        q: c[0] && c[0].v ? String(c[0].v).trim() : '',
+        lecon: c[1] && c[1].v ? String(c[1].v).trim() : '',
+        r: c[2] && c[2].v ? String(c[2].v).trim() : '',
+        video: c[4] && c[4].v ? String(c[4].v).trim() : ''
       };
-    }).filter(c => c.q.length > 0);
+    }).filter(card => card.q.length > 0);
+
+    if (allCards.length === 0) {
+      loadingEl.textContent = "Aucune question valide trouvée.";
+      return;
+    }
 
     filteredCards = [...allCards];
     loadingEl.classList.add('hidden');
@@ -52,7 +60,7 @@ fetch(SHEET_URL)
   })
   .catch(err => {
     console.error(err);
-    loadingEl.innerHTML = "⚠️ Impossible de charger les cartes.<br>Vérifiez le partage du Google Sheet ('Tous les utilisateurs avec le lien').";
+    loadingEl.innerHTML = "⚠️ Impossible de charger les cartes.<br><br>Vérifiez les points suivants :<br>1. Le Google Sheet doit être en <strong>'Tous les utilisateurs disposant du lien'</strong>.<br>2. Allez dans Google Sheets > <strong>Fichier</strong> > <strong>Partager</strong> > <strong>Publier sur le Web</strong> puis cliquez sur <strong>Publier</strong>.";
   });
 
 // Afficher une carte selon son index
@@ -69,7 +77,7 @@ function showCard(index) {
   }
 
   cardDetails.classList.remove('hidden');
-  cardDetails.removeAttribute('open'); // Referme le détail quand on change de carte
+  cardDetails.removeAttribute('open'); // Referme la réponse au changement de carte
 
   currentIndex = index;
   const card = filteredCards[currentIndex];
@@ -120,9 +128,9 @@ searchInput.addEventListener('input', (e) => {
   showCard(0);
 });
 
-// Navigation au clavier (Flèches Gauche / Droite)
+// Navigation au clavier
 document.addEventListener('keydown', (e) => {
-  if (document.activeElement === searchInput) return; // Ne pas interférer avec la saisie de texte
+  if (document.activeElement === searchInput) return;
   if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
     showCard(currentIndex - 1);
   } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {

@@ -10,11 +10,50 @@
 
   <header>
     <h1>🎴 Flashcards CAPES Mathématiques</h1>
-    <input type="text" id="searchInput" placeholder="🔎 Rechercher une question, leçon, théorème...">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="🔎 Filtrer par mot-clé, leçon...">
+    </div>
   </header>
 
-  <main id="cardsContainer">
-    <p class="loading">Chargement direct depuis Google Sheets...</p>
+  <main>
+    <div id="loading" class="status-msg">Chargement des cartes depuis Google Sheets...</div>
+
+    <div id="flashcardContainer" class="card-wrapper hidden">
+      <!-- Indicateur de progression -->
+      <div class="progress-info">
+        <span id="counter">Carte 1 / 1</span>
+        <button id="randomBtn" class="btn-secondary" title="Carte aléatoire">🎲 Aléatoire</button>
+      </div>
+
+      <!-- La carte unique -->
+      <article class="card">
+        <div class="card-header">
+          <span class="badge" id="cardLesson">Leçon --</span>
+        </div>
+        
+        <div class="card-body">
+          <div class="question" id="cardQuestion">Chargement...</div>
+          
+          <details id="cardDetails">
+            <summary>👉 Afficher la réponse / preuve</summary>
+            <div class="response-content">
+              <p><strong>Preuve / Démonstration :</strong></p>
+              <div id="cardResponse"></div>
+              <div id="cardVideoContainer" class="video-box hidden">
+                <a id="cardVideo" class="video-link" href="#" target="_blank">🎬 Aide vidéo</a>
+              </div>
+            </div>
+          </details>
+        </div>
+      </article>
+
+      <!-- Contrôles de navigation -->
+      <div class="nav-controls">
+        <button id="prevBtn" class="nav-btn">⬅️ Précédent</button>
+        <button id="nextBtn" class="nav-btn primary">Suivant ➡️</button>
+      </div>
+      <p class="nav-hint">💡 Astuce : utilise les flèches ⬅️ et ➡️ de ton clavier pour naviguer.</p>
+    </div>
   </main>
 
   <script src="app.js"></script>

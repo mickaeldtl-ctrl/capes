@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 # Remplace par l'ID de ton Google Sheet
-SPREADSHEET_ID = "TON_ID_GOOGLE_SHEET"
+SPREADSHEET_ID = "1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o"
 
 csv_url = f"https://docs.google.com/spreadsheets/d/{1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o}/export?format=csv"
 

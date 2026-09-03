@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Flashcards CAPES Maths</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <!-- Thème Docsify -->
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <style>
+    /* Style pour masquer/afficher la réponse au clic */
+    details {
+      background-color: #f8f9fa;
+      border-left: 4px solid #42b983;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    summary {
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">Chargement des révisions...</div>
+  <script>
+    window.$docsify = {
+      name: 'Flashcards CAPES',
+      repo: '',
+      loadSidebar: true,
+      autoHeader: true,
+      subMaxLevel: 2,
+      search: {
+        placeholder: 'Rechercher un théorème, une leçon...',
+        noData: 'Aucun résultat trouvé.',
+        depth: 3
+      }
+    }
+  </script>
+  <!-- Script principal Docsify -->
+  <script src="//cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+  <!-- Plugin de recherche instantanée -->
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+</body>
+</html>

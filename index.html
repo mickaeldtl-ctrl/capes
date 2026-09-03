@@ -3,43 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <title>Flashcards CAPES Maths</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-  <!-- Thème Docsify -->
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Style pour masquer/afficher la réponse au clic */
-    details {
-      background-color: #f8f9fa;
-      border-left: 4px solid #42b983;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 4px;
-    }
-    summary {
-      font-weight: bold;
-      cursor: pointer;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f6f8; color: #333; }
+    h1 { text-align: center; color: #1a365d; }
+    .filter-container { margin-bottom: 20px; text-align: center; }
+    select, input { padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; width: 80%; max-width: 400px; margin-bottom: 10px; }
+    .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #3182ce; }
+    .question { font-weight: bold; font-size: 1.1em; color: #2b6cb0; }
+    details { margin-top: 10px; padding: 10px; background: #edf2f7; border-radius: 6px; }
+    summary { font-weight: bold; cursor: pointer; color: #2d3748; }
+    .badge { display: inline-block; background: #e2e8f0; color: #4a5568; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-bottom: 8px; }
+    a { color: #3182ce; text-decoration: none; }
   </style>
 </head>
 <body>
-  <div id="app">Chargement des révisions...</div>
+
+  <h1>🎴 Révisions CAPES Mathématiques</h1>
+
+  <div class="filter-container">
+    <input type="text" id="searchInput" onkeyup="filterCards()" placeholder="🔎 Rechercher un théorème, question...">
+  </div>
+
+  <div id="cardsContainer">Chargement des cartes...</div>
+
   <script>
-    window.$docsify = {
-      name: 'Flashcards CAPES',
-      repo: '',
-      loadSidebar: true,
-      autoHeader: true,
-      subMaxLevel: 2,
-      search: {
-        placeholder: 'Rechercher un théorème, une leçon...',
-        noData: 'Aucun résultat trouvé.',
-        depth: 3
+    let allCards = [];
+
+    // Télécharge le fichier CSV généré par le script Python
+    fetch('data/flashcards.csv')
+      .then(res => res.text())
+      .then(csvText => {
+        const lines = csvText.trim().split('\n');
+        const headers = lines[0].split(',');
+        
+        allCards = lines.slice(1).map(line => {
+          const cols = line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/);
+          return {
+            q: cols[0] ? cols[0].replace(/^"|"$/g, '') : '',
+            lecon: cols[1] ? cols[1].replace(/^"|"$/g, '') : '',
+            r: cols[2] ? cols[2].replace(/^"|"$/g, '') : '',
+            video: cols[4] ? cols[4].replace(/^"|"$/g, '') : ''
+          };
+        }).filter(c => c.q);
+
+        renderCards(allCards);
+      })
+      .catch(err => {
+        document.getElementById('cardsContainer').innerHTML = "<p style='color:red;'>Erreur de chargement. Vérifiez que l'Action GitHub s'est exécutée au moins une fois.</p>";
+      });
+
+    function renderCards(cards) {
+      const container = document.getElementById('cardsContainer');
+      if (cards.length === 0) {
+        container.innerHTML = "<p>Aucune carte trouvée.</p>";
+        return;
       }
+
+      container.innerHTML = cards.map(c => `
+        <div class="card">
+          <span class="badge">Leçon ${c.lecon}</span>
+          <div class="question">❓ ${c.q}</div>
+          <details>
+            <summary>👉 Afficher la réponse / preuve</summary>
+            <p><strong>Preuve :</strong> ${c.r}</p>
+            ${c.video ? `<p>🎬 <a href="${c.video}" target="_blank">Voir l'aide vidéo</a></p>` : ''}
+          </details>
+        </div>
+      `).join('');
+    }
+
+    function filterCards() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allCards.filter(c => 
+        c.q.toLowerCase().includes(query) || 
+        c.r.toLowerCase().includes(query) || 
+        c.lecon.toLowerCase().includes(query)
+      );
+      renderCards(filtered);
     }
   </script>
-  <!-- Script principal Docsify -->
-  <script src="//cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
-  <!-- Plugin de recherche instantanée -->
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
 </body>
 </html>

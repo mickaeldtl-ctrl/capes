@@ -1,8 +1,8 @@
 // 1. Mets l'ID de ton Google Sheet ici
-const SPREADSHEET_ID = "TON_ID_GOOGLE_SHEET";
+const SPREADSHEET_ID = "1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o";
 
 // URL d'export CSV direct depuis Google Sheets
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o}/export?format=csv`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o/edit?gid=0#gid=0`;
 
 let allCards = [];
 

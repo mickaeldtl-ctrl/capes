@@ -20,13 +20,14 @@
       </div>
     </header>
 
+    <!-- ÉLÉMENT CHARGEMENT (INDISPENSABLE) -->
     <div id="loading" class="status-msg">
       <div class="spinner"></div>
-      <p>Chargement de vos cartes en cours...</p>
+      <p id="loadingText">Chargement de vos cartes en cours...</p>
     </div>
 
+    <!-- APPLICATION PRINCIPALE -->
     <main id="flashcardApp" class="hidden">
-      <!-- Méta-informations & Statistiques rapides -->
       <div class="deck-bar">
         <div class="deck-info">
           <span id="counter" class="counter-badge">Carte 1 / 1</span>
@@ -38,7 +39,6 @@
         </div>
       </div>
 
-      <!-- CARTE PRINCIPALE -->
       <div class="card-deck">
         <article class="flashcard">
           <div class="card-top">
@@ -51,7 +51,6 @@
               <div class="question-text" id="cardQuestion">Chargement...</div>
             </div>
 
-            <!-- Réponse masquée par défaut -->
             <div id="answerSection" class="answer-section hidden">
               <hr class="divider">
               <span class="section-label">RÉPONSE / PREUVE</span>
@@ -65,14 +64,12 @@
             </div>
           </div>
 
-          <!-- Bouton Révéler -->
           <div id="revealContainer" class="reveal-container">
             <button id="revealBtn" class="btn-reveal">Afficher la réponse</button>
           </div>
         </article>
       </div>
 
-      <!-- PANNEAU D'ÉVALUATION SRS (Masqué jusqu'à ce que la réponse soit révélée) -->
       <div id="srsPanel" class="srs-container hidden">
         <p class="srs-instruction">Comment as-tu retenu cette carte ?</p>
         <div class="srs-actions">
@@ -94,14 +91,12 @@
         </div>
       </div>
 
-      <!-- Navigation manuelle simple -->
       <footer class="card-footer">
         <button id="prevBtn" class="nav-arrow">← Précédente</button>
         <button id="nextBtn" class="nav-arrow">Suivante →</button>
       </footer>
     </main>
 
-    <!-- Notification Toast après révision -->
     <div id="toast" class="toast hidden"></div>
   </div>
 

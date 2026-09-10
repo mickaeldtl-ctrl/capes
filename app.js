@@ -1,4 +1,4 @@
-// URL du CSV
+// Identifiant de ta feuille Google Sheets
 const SPREADSHEET_ID = "1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o";
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
 
@@ -6,7 +6,7 @@ let allCards = [];
 let filteredCards = [];
 let currentIndex = 0;
 
-// Éléments du DOM avec secours explicite
+// Sélection sécurisée des éléments DOM
 const loadingEl = document.getElementById('loading');
 const appEl = document.getElementById('flashcardApp');
 const cardQuestion = document.getElementById('cardQuestion');
@@ -32,6 +32,7 @@ const btnHard = document.getElementById('btnHard');
 const btnEasy = document.getElementById('btnEasy');
 const easyIntervalText = document.getElementById('easyIntervalText');
 
+// Gestion du stockage local pour le SRS
 function getSRSData() {
   try {
     return JSON.parse(localStorage.getItem('srs_capes_maths') || '{}');
@@ -44,7 +45,7 @@ function saveSRSData(data) {
   try {
     localStorage.setItem('srs_capes_maths', JSON.stringify(data));
   } catch (e) {
-    console.error(e);
+    console.error("Erreur de sauvegarde locale:", e);
   }
 }
 
@@ -53,7 +54,7 @@ function sanitizeText(val) {
   return String(val).trim().replace(/^"|"$/g, '');
 }
 
-// Téléchargement CSV
+// Chargement du CSV avec PapaParse
 Papa.parse(SHEET_URL, {
   download: true,
   header: false,
@@ -62,18 +63,19 @@ Papa.parse(SHEET_URL, {
     try {
       const rows = results.data;
       if (!rows || rows.length <= 1) {
-        showError("Aucune donnée trouvée.");
+        showError("Aucune donnée disponible dans le tableau.");
         return;
       }
 
       const srsData = getSRSData();
 
+      // Traitement des lignes (Colonne 0: Q, 1: Leçon, 2: R, 3: Statut, 4: Vidéo)
       allCards = rows.slice(1).map((row) => {
         if (!Array.isArray(row)) return null;
 
         const question = sanitizeText(row[0]);
         const lecon = sanitizeText(row[1]) || 'Non spécifiée';
-        const reponse = sanitizeText(row[2]) || 'Pas de réponse.';
+        const reponse = sanitizeText(row[2]) || 'Pas de réponse renseignée.';
         const statut = sanitizeText(row[3]).toUpperCase();
         const video = sanitizeText(row[4]);
 
@@ -98,46 +100,52 @@ Papa.parse(SHEET_URL, {
       );
 
       if (allCards.length === 0) {
-        showError("Aucune carte 'OK' trouvée dans la colonne D.");
+        showError("Aucune carte valide avec 'OK' en colonne D n'a été trouvée.");
         return;
       }
 
+      // Tri par date de révision
       allCards.sort((a, b) => a.nextReview - b.nextReview);
 
       filteredCards = [...allCards];
 
-      if (loadingEl) loadingEl.classList.add('hidden');
-      if (appEl) appEl.classList.remove('hidden');
+      // Masquer le chargement et afficher l'application en toute sécurité
+      loadingEl?.classList.add('hidden');
+      appEl?.classList.remove('hidden');
 
       showCard(0);
 
     } catch (err) {
-      showError("Erreur JS : " + err.message);
+      showError("Erreur d'exécution : " + err.message);
     }
   },
   error: function(err) {
-    showError("Erreur réseau / CSV : " + err);
+    showError("Impossible d'accéder au CSV. Vérifiez la publication de votre Google Sheet sur le Web.");
   }
 });
 
 function showError(msg) {
   if (loadingEl) {
-    loadingEl.innerHTML = `<p style="color:#ef4444; font-weight:bold; text-align:center; padding: 20px;">⚠️ ${msg}</p>`;
+    loadingEl.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding: 20px;">⚠️ ${msg}</div>`;
   }
 }
 
 function showCard(index) {
   if (filteredCards.length === 0) {
     if (cardQuestion) cardQuestion.textContent = "Aucune carte trouvée.";
+    if (cardResponse) cardResponse.textContent = "";
+    if (cardLesson) cardLesson.textContent = "Leçon --";
+    if (counterEl) counterEl.textContent = "0 / 0";
+    dueBadge?.classList.add('hidden');
     return;
   }
 
   currentIndex = index;
   const card = filteredCards[currentIndex];
 
-  if (answerSection) answerSection.classList.add('hidden');
-  if (srsPanel) srsPanel.classList.add('hidden');
-  if (revealContainer) revealContainer.classList.remove('hidden');
+  answerSection?.classList.add('hidden');
+  srsPanel?.classList.add('hidden');
+  revealContainer?.classList.remove('hidden');
 
   if (cardQuestion) cardQuestion.textContent = card.q;
   if (cardLesson) cardLesson.textContent = `Leçon : ${card.lecon}`;
@@ -158,8 +166,11 @@ function showCard(index) {
   }
 
   if (dueBadge) {
-    if (card.nextReview <= Date.now()) dueBadge.classList.remove('hidden');
-    else dueBadge.classList.add('hidden');
+    if (card.nextReview <= Date.now()) {
+      dueBadge.classList.remove('hidden');
+    } else {
+      dueBadge.classList.add('hidden');
+    }
   }
 
   if (counterEl) counterEl.textContent = `Carte ${currentIndex + 1} / ${filteredCards.length}`;
@@ -167,13 +178,11 @@ function showCard(index) {
   if (nextBtn) nextBtn.disabled = currentIndex === filteredCards.length - 1;
 }
 
-if (revealBtn) {
-  revealBtn.addEventListener('click', () => {
-    if (revealContainer) revealContainer.classList.add('hidden');
-    if (answerSection) answerSection.classList.remove('hidden');
-    if (srsPanel) srsPanel.classList.remove('hidden');
-  });
-}
+revealBtn?.addEventListener('click', () => {
+  revealContainer?.classList.add('hidden');
+  answerSection?.classList.remove('hidden');
+  srsPanel?.classList.remove('hidden');
+});
 
 function rateCard(quality) {
   if (filteredCards.length === 0) return;
@@ -230,42 +239,36 @@ function showToast(msg) {
   setTimeout(() => toast.classList.add('hidden'), 2000);
 }
 
-if (btnAgain) btnAgain.addEventListener('click', () => rateCard('again'));
-if (btnHard) btnHard.addEventListener('click', () => rateCard('hard'));
-if (btnEasy) btnEasy.addEventListener('click', () => rateCard('easy'));
+btnAgain?.addEventListener('click', () => rateCard('again'));
+btnHard?.addEventListener('click', () => rateCard('hard'));
+btnEasy?.addEventListener('click', () => rateCard('easy'));
 
-if (prevBtn) prevBtn.addEventListener('click', () => currentIndex > 0 && showCard(currentIndex - 1));
-if (nextBtn) nextBtn.addEventListener('click', () => currentIndex < filteredCards.length - 1 && showCard(currentIndex + 1));
+prevBtn?.addEventListener('click', () => currentIndex > 0 && showCard(currentIndex - 1));
+nextBtn?.addEventListener('click', () => currentIndex < filteredCards.length - 1 && showCard(currentIndex + 1));
 
-if (randomBtn) {
-  randomBtn.addEventListener('click', () => {
-    if (filteredCards.length <= 1) return;
-    let rand;
-    do { rand = Math.floor(Math.random() * filteredCards.length); } while (rand === currentIndex);
-    showCard(rand);
-  });
-}
+randomBtn?.addEventListener('click', () => {
+  if (filteredCards.length <= 1) return;
+  let rand;
+  do { rand = Math.floor(Math.random() * filteredCards.length); } while (rand === currentIndex);
+  showCard(rand);
+});
 
-if (resetSrsBtn) {
-  resetSrsBtn.addEventListener('click', () => {
-    if (confirm("Réinitialiser l'historique de révision ?")) {
-      localStorage.removeItem('srs_capes_maths');
-      location.reload();
-    }
-  });
-}
+resetSrsBtn?.addEventListener('click', () => {
+  if (confirm("Réinitialiser l'historique de révision locale ?")) {
+    localStorage.removeItem('srs_capes_maths');
+    location.reload();
+  }
+});
 
-if (searchInput) {
-  searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase();
-    filteredCards = allCards.filter(c =>
-      c.q.toLowerCase().includes(query) ||
-      c.r.toLowerCase().includes(query) ||
-      c.lecon.toLowerCase().includes(query)
-    );
-    showCard(0);
-  });
-}
+searchInput?.addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase();
+  filteredCards = allCards.filter(c =>
+    c.q.toLowerCase().includes(query) ||
+    c.r.toLowerCase().includes(query) ||
+    c.lecon.toLowerCase().includes(query)
+  );
+  showCard(0);
+});
 
 document.addEventListener('keydown', (e) => {
   if (document.activeElement === searchInput) return;

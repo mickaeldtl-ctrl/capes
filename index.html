@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Flashcards CAPES Maths</title>
+  <title>Flashcards CAPES Mathématiques</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -20,13 +20,16 @@
     <div id="loading" class="status-msg">Chargement des cartes depuis Google Sheets...</div>
 
     <div id="flashcardContainer" class="card-wrapper hidden">
-      <!-- Indicateur de progression -->
+      <!-- Progression & Actions rapides -->
       <div class="progress-info">
         <span id="counter">Carte 1 / 1</span>
-        <button id="randomBtn" class="btn-secondary" title="Carte aléatoire">🎲 Aléatoire</button>
+        <div class="header-actions">
+          <button id="resetSrsBtn" class="btn-secondary" title="Réinitialiser l'historique de révision">🔄 RàZ SRS</button>
+          <button id="randomBtn" class="btn-secondary" title="Carte aléatoire">🎲 Aléatoire</button>
+        </div>
       </div>
 
-      <!-- La carte unique -->
+      <!-- La carte principale -->
       <article class="card">
         <div class="card-header">
           <span class="badge" id="cardLesson">Leçon --</span>
@@ -38,22 +41,43 @@
           <details id="cardDetails">
             <summary>👉 Afficher la réponse / preuve</summary>
             <div class="response-content">
-              <p><strong>Preuve / Démonstration :</strong></p>
               <div id="cardResponse"></div>
               <div id="cardVideoContainer" class="video-box hidden">
-                <a id="cardVideo" class="video-link" href="#" target="_blank">🎬 Aide vidéo</a>
+                <a id="cardVideo" class="video-link" href="#" target="_blank">🎬 Voir la vidéo explicative</a>
               </div>
             </div>
           </details>
         </div>
       </article>
 
-      <!-- Contrôles de navigation -->
+      <!-- Panneau Auto-Évaluation (Courbe de l'oubli SRS) -->
+      <section class="srs-panel">
+        <p class="srs-title">Auto-évaluation (Répétition espacée) :</p>
+        <div class="srs-buttons">
+          <button id="btnAgain" class="srs-btn again">
+            <span class="srs-icon">❌</span>
+            <span class="srs-label">À revoir</span>
+            <span class="srs-sub">Aujourd'hui</span>
+          </button>
+          <button id="btnHard" class="srs-btn hard">
+            <span class="srs-icon">⚠️</span>
+            <span class="srs-label">Difficile</span>
+            <span class="srs-sub">Bientôt</span>
+          </button>
+          <button id="btnEasy" class="srs-btn easy">
+            <span class="srs-icon">✅</span>
+            <span class="srs-label">Facile</span>
+            <span class="srs-sub">+ Espacé</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Navigation classique -->
       <div class="nav-controls">
         <button id="prevBtn" class="nav-btn">⬅️ Précédent</button>
         <button id="nextBtn" class="nav-btn primary">Suivant ➡️</button>
       </div>
-      <p class="nav-hint">💡 Astuce : utilise les flèches ⬅️ et ➡️ de ton clavier pour naviguer.</p>
+      <p class="nav-hint">💡 Astuce : utilise ⬅️ et ➡️ pour naviguer, ou évalue tes connaissances pour planifier les révisions.</p>
     </div>
   </main>
 

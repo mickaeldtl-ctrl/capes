@@ -9,77 +9,101 @@
 </head>
 <body>
 
-  <header>
-    <h1>🎴 Flashcards CAPES Mathématiques</h1>
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="🔎 Filtrer par mot-clé, leçon...">
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <span class="logo-icon">📐</span>
+        <h1>CAPES Mathématiques</h1>
+      </div>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Rechercher une leçon, un théorème...">
+      </div>
+    </header>
+
+    <div id="loading" class="status-msg">
+      <div class="spinner"></div>
+      <p>Chargement de vos cartes en cours...</p>
     </div>
-  </header>
 
-  <main>
-    <div id="loading" class="status-msg">Chargement des cartes depuis Google Sheets...</div>
-
-    <div id="flashcardContainer" class="card-wrapper hidden">
-      <!-- Progression & Actions rapides -->
-      <div class="progress-info">
-        <span id="counter">Carte 1 / 1</span>
-        <div class="header-actions">
-          <button id="resetSrsBtn" class="btn-secondary" title="Réinitialiser l'historique de révision">🔄 RàZ SRS</button>
-          <button id="randomBtn" class="btn-secondary" title="Carte aléatoire">🎲 Aléatoire</button>
+    <main id="flashcardApp" class="hidden">
+      <!-- Méta-informations & Statistiques rapides -->
+      <div class="deck-bar">
+        <div class="deck-info">
+          <span id="counter" class="counter-badge">Carte 1 / 1</span>
+          <span id="dueBadge" class="due-badge hidden">⚠️ À réviser</span>
+        </div>
+        <div class="deck-actions">
+          <button id="randomBtn" class="action-btn" title="Carte aléatoire">🎲 Aléatoire</button>
+          <button id="resetSrsBtn" class="action-btn text-danger" title="Réinitialiser l'historique">🔄 RàZ</button>
         </div>
       </div>
 
-      <!-- La carte principale -->
-      <article class="card">
-        <div class="card-header">
-          <span class="badge" id="cardLesson">Leçon --</span>
-        </div>
-        
-        <div class="card-body">
-          <div class="question" id="cardQuestion">Chargement...</div>
-          
-          <details id="cardDetails">
-            <summary>👉 Afficher la réponse / preuve</summary>
-            <div class="response-content">
-              <div id="cardResponse"></div>
+      <!-- CARTE PRINCIPALE -->
+      <div class="card-deck">
+        <article class="flashcard">
+          <div class="card-top">
+            <span class="badge-lesson" id="cardLesson">Leçon --</span>
+          </div>
+
+          <div class="card-content">
+            <div class="question-section">
+              <span class="section-label">QUESTION</span>
+              <div class="question-text" id="cardQuestion">Chargement...</div>
+            </div>
+
+            <!-- Réponse masquée par défaut -->
+            <div id="answerSection" class="answer-section hidden">
+              <hr class="divider">
+              <span class="section-label">RÉPONSE / PREUVE</span>
+              <div class="answer-text" id="cardResponse"></div>
+              
               <div id="cardVideoContainer" class="video-box hidden">
-                <a id="cardVideo" class="video-link" href="#" target="_blank">🎬 Voir la vidéo explicative</a>
+                <a id="cardVideo" href="#" target="_blank" class="video-btn">
+                  ▶ Visualiser la vidéo explicative
+                </a>
               </div>
             </div>
-          </details>
-        </div>
-      </article>
+          </div>
 
-      <!-- Panneau Auto-Évaluation (Courbe de l'oubli SRS) -->
-      <section class="srs-panel">
-        <p class="srs-title">Auto-évaluation (Répétition espacée) :</p>
-        <div class="srs-buttons">
-          <button id="btnAgain" class="srs-btn again">
-            <span class="srs-icon">❌</span>
-            <span class="srs-label">À revoir</span>
-            <span class="srs-sub">Aujourd'hui</span>
-          </button>
-          <button id="btnHard" class="srs-btn hard">
-            <span class="srs-icon">⚠️</span>
-            <span class="srs-label">Difficile</span>
-            <span class="srs-sub">Bientôt</span>
-          </button>
-          <button id="btnEasy" class="srs-btn easy">
-            <span class="srs-icon">✅</span>
-            <span class="srs-label">Facile</span>
-            <span class="srs-sub">+ Espacé</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- Navigation classique -->
-      <div class="nav-controls">
-        <button id="prevBtn" class="nav-btn">⬅️ Précédent</button>
-        <button id="nextBtn" class="nav-btn primary">Suivant ➡️</button>
+          <!-- Bouton Révéler -->
+          <div id="revealContainer" class="reveal-container">
+            <button id="revealBtn" class="btn-reveal">Afficher la réponse</button>
+          </div>
+        </article>
       </div>
-      <p class="nav-hint">💡 Astuce : utilise ⬅️ et ➡️ pour naviguer, ou évalue tes connaissances pour planifier les révisions.</p>
-    </div>
-  </main>
+
+      <!-- PANNEAU D'ÉVALUATION SRS (Masqué jusqu'à ce que la réponse soit révélée) -->
+      <div id="srsPanel" class="srs-container hidden">
+        <p class="srs-instruction">Comment as-tu retenu cette carte ?</p>
+        <div class="srs-actions">
+          <button id="btnAgain" class="srs-btn btn-again">
+            <span class="srs-emoji">🔴</span>
+            <span class="srs-title">À revoir</span>
+            <span class="srs-time">&lt; 1 min</span>
+          </button>
+          <button id="btnHard" class="srs-btn btn-hard">
+            <span class="srs-emoji">🟠</span>
+            <span class="srs-title">Difficile</span>
+            <span class="srs-time">Demain</span>
+          </button>
+          <button id="btnEasy" class="srs-btn btn-easy">
+            <span class="srs-emoji">🟢</span>
+            <span class="srs-title">Facile</span>
+            <span class="srs-time" id="easyIntervalText">+4 jours</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation manuelle simple -->
+      <footer class="card-footer">
+        <button id="prevBtn" class="nav-arrow">← Précédente</button>
+        <button id="nextBtn" class="nav-arrow">Suivante →</button>
+      </footer>
+    </main>
+
+    <!-- Notification Toast après révision -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
 
   <script src="app.js"></script>
 </body>

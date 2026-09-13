@@ -1,14 +1,17 @@
-// Identifiant de ta feuille Google Sheets
+// Remplace l'URL ci-dessous par ton lien CSV Google Sheets publié sur le web si nécessaire
 const SPREADSHEET_ID = "1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o";
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
 
-let allCards = [];
-let filteredCards = [];
-let currentIndex = 0;
+let queue = [];            // File d'attente des cartes à réviser aujourd'hui
+let currentCard = null;
+let totalSessionCount = 0; // Nombre initial de cartes pour la barre de progression
+let completedCount = 0;
 
-// Sélection sécurisée des éléments DOM
+// Sélection des éléments HTML
 const loadingEl = document.getElementById('loading');
 const appEl = document.getElementById('flashcardApp');
+const sessionDoneEl = document.getElementById('sessionDone');
+
 const cardQuestion = document.getElementById('cardQuestion');
 const cardLesson = document.getElementById('cardLesson');
 const answerSection = document.getElementById('answerSection');
@@ -19,10 +22,7 @@ const revealContainer = document.getElementById('revealContainer');
 const revealBtn = document.getElementById('revealBtn');
 const srsPanel = document.getElementById('srsPanel');
 const counterEl = document.getElementById('counter');
-const dueBadge = document.getElementById('dueBadge');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const randomBtn = document.getElementById('randomBtn');
+
 const resetSrsBtn = document.getElementById('resetSrsBtn');
 const searchInput = document.getElementById('searchInput');
 const toast = document.getElementById('toast');
@@ -32,7 +32,7 @@ const btnHard = document.getElementById('btnHard');
 const btnEasy = document.getElementById('btnEasy');
 const easyIntervalText = document.getElementById('easyIntervalText');
 
-// Gestion du stockage local pour le SRS
+// Gestion du stockage local
 function getSRSData() {
   try {
     return JSON.parse(localStorage.getItem('srs_capes_maths') || '{}');
@@ -45,7 +45,7 @@ function saveSRSData(data) {
   try {
     localStorage.setItem('srs_capes_maths', JSON.stringify(data));
   } catch (e) {
-    console.error("Erreur de sauvegarde locale:", e);
+    console.error("Erreur de sauvegarde :", e);
   }
 }
 
@@ -54,7 +54,7 @@ function sanitizeText(val) {
   return String(val).trim().replace(/^"|"$/g, '');
 }
 
-// Chargement du CSV avec PapaParse
+// Chargement et préparation de la file du jour
 Papa.parse(SHEET_URL, {
   download: true,
   header: false,
@@ -63,19 +63,20 @@ Papa.parse(SHEET_URL, {
     try {
       const rows = results.data;
       if (!rows || rows.length <= 1) {
-        showError("Aucune donnée disponible dans le tableau.");
+        showError("Aucune donnée trouvée dans la feuille.");
         return;
       }
 
       const srsData = getSRSData();
+      const now = Date.now();
 
-      // Traitement des lignes (Colonne 0: Q, 1: Leçon, 2: R, 3: Statut, 4: Vidéo)
-      allCards = rows.slice(1).map((row) => {
+      // Extraction de toutes les cartes "OK"
+      const allCards = rows.slice(1).map((row) => {
         if (!Array.isArray(row)) return null;
 
         const question = sanitizeText(row[0]);
         const lecon = sanitizeText(row[1]) || 'Non spécifiée';
-        const reponse = sanitizeText(row[2]) || 'Pas de réponse renseignée.';
+        const reponse = sanitizeText(row[2]) || 'Pas de réponse.';
         const statut = sanitizeText(row[3]).toUpperCase();
         const video = sanitizeText(row[4]);
 
@@ -100,27 +101,34 @@ Papa.parse(SHEET_URL, {
       );
 
       if (allCards.length === 0) {
-        showError("Aucune carte valide avec 'OK' en colonne D n'a été trouvée.");
+        showError("Aucune carte validée avec 'OK' en colonne D.");
         return;
       }
 
-      // Tri par date de révision
-      allCards.sort((a, b) => a.nextReview - b.nextReview);
+      // FILTRE STRICT : Uniquement les cartes dues aujourd'hui ou jamais vues
+      queue = allCards.filter(card => card.nextReview <= now);
 
-      filteredCards = [...allCards];
+      // Tri pour traiter en priorité les cartes les plus anciennes
+      queue.sort((a, b) => a.nextReview - b.nextReview);
 
-      // Masquer le chargement et afficher l'application en toute sécurité
+      totalSessionCount = queue.length;
+      completedCount = 0;
+
       loadingEl?.classList.add('hidden');
-      appEl?.classList.remove('hidden');
 
-      showCard(0);
+      if (queue.length === 0) {
+        showSessionFinished();
+      } else {
+        appEl?.classList.remove('hidden');
+        nextCard();
+      }
 
     } catch (err) {
-      showError("Erreur d'exécution : " + err.message);
+      showError("Erreur d'analyse : " + err.message);
     }
   },
-  error: function(err) {
-    showError("Impossible d'accéder au CSV. Vérifiez la publication de votre Google Sheet sur le Web.");
+  error: function() {
+    showError("Impossible d'accéder au fichier Google Sheets.");
   }
 });
 
@@ -130,148 +138,135 @@ function showError(msg) {
   }
 }
 
-function showCard(index) {
-  if (filteredCards.length === 0) {
-    if (cardQuestion) cardQuestion.textContent = "Aucune carte trouvée.";
-    if (cardResponse) cardResponse.textContent = "";
-    if (cardLesson) cardLesson.textContent = "Leçon --";
-    if (counterEl) counterEl.textContent = "0 / 0";
-    dueBadge?.classList.add('hidden');
+function showSessionFinished() {
+  appEl?.classList.add('hidden');
+  sessionDoneEl?.classList.remove('hidden');
+}
+
+function nextCard() {
+  if (queue.length === 0) {
+    showSessionFinished();
     return;
   }
 
-  currentIndex = index;
-  const card = filteredCards[currentIndex];
+  currentCard = queue[0];
 
+  // Masquer la réponse
   answerSection?.classList.add('hidden');
   srsPanel?.classList.add('hidden');
   revealContainer?.classList.remove('hidden');
 
-  if (cardQuestion) cardQuestion.textContent = card.q;
-  if (cardLesson) cardLesson.textContent = `Leçon : ${card.lecon}`;
-  if (cardResponse) cardResponse.innerHTML = card.r;
+  if (cardQuestion) cardQuestion.textContent = currentCard.q;
+  if (cardLesson) cardLesson.textContent = `Leçon : ${currentCard.lecon}`;
+  if (cardResponse) cardResponse.innerHTML = currentCard.r;
 
   if (cardVideoContainer && cardVideo) {
-    if (card.video && card.video.startsWith('http')) {
-      cardVideo.href = card.video;
+    if (currentCard.video && currentCard.video.startsWith('http')) {
+      cardVideo.href = currentCard.video;
       cardVideoContainer.classList.remove('hidden');
     } else {
       cardVideoContainer.classList.add('hidden');
     }
   }
 
+  // Calcul dynamique du délai indicatif sur le bouton Facile
   if (easyIntervalText) {
-    const nextEasyDays = card.repetitions === 0 ? 3 : Math.round((card.interval || 1) * (card.easeFactor || 2.5));
-    easyIntervalText.textContent = `+${nextEasyDays} j`;
+    const nextDays = currentCard.repetitions === 0 ? 3 : Math.round((currentCard.interval || 1) * (currentCard.easeFactor || 2.5));
+    easyIntervalText.textContent = `+${nextDays} j`;
   }
 
-  if (dueBadge) {
-    if (card.nextReview <= Date.now()) {
-      dueBadge.classList.remove('hidden');
-    } else {
-      dueBadge.classList.add('hidden');
-    }
+  if (counterEl) {
+    counterEl.textContent = `Reste à réviser : ${queue.length} carte(s)`;
   }
-
-  if (counterEl) counterEl.textContent = `Carte ${currentIndex + 1} / ${filteredCards.length}`;
-  if (prevBtn) prevBtn.disabled = currentIndex === 0;
-  if (nextBtn) nextBtn.disabled = currentIndex === filteredCards.length - 1;
 }
 
+// Révéler la réponse
 revealBtn?.addEventListener('click', () => {
   revealContainer?.classList.add('hidden');
   answerSection?.classList.remove('hidden');
   srsPanel?.classList.remove('hidden');
 });
 
+// Évaluation SRS
 function rateCard(quality) {
-  if (filteredCards.length === 0) return;
+  if (!currentCard) return;
 
-  const card = filteredCards[currentIndex];
   const srsData = getSRSData();
-
-  let interval = card.interval || 0;
-  let repetitions = card.repetitions || 0;
-  let easeFactor = card.easeFactor || 2.5;
+  let interval = currentCard.interval || 0;
+  let repetitions = currentCard.repetitions || 0;
+  let easeFactor = currentCard.easeFactor || 2.5;
   let toastMsg = "";
 
   if (quality === 'again') {
+    // 🔴 ÉCHEC : La carte reste dans la session du jour
     repetitions = 0;
     interval = 0;
-    toastMsg = "🔴 Remise en file de révision";
+    toastMsg = "🔴 Remise en fin de file";
+
+    // Retirer du début et remettre à la fin de la file
+    queue.shift();
+    queue.push(currentCard);
+
   } else if (quality === 'hard') {
+    // 🟠 DIFFICILE : Revoir demain (+1 jour)
     interval = repetitions === 0 ? 1 : Math.max(1, Math.round(interval * 1.2));
     repetitions += 1;
     easeFactor = Math.max(1.3, easeFactor - 0.15);
-    toastMsg = "🟠 À revoir demain";
+    toastMsg = "🟠 Prévue pour demain";
+
+    queue.shift(); // Sort de la session du jour
+    completedCount++;
+
   } else if (quality === 'easy') {
+    // 🟢 FACILE : Espacement accru (+3j, +6j...)
     if (repetitions === 0) interval = 3;
     else if (repetitions === 1) interval = 6;
     else interval = Math.round(interval * easeFactor);
     repetitions += 1;
     easeFactor += 0.1;
     toastMsg = `🟢 Revoir dans ${interval} jours`;
+
+    queue.shift(); // Sort de la session du jour
+    completedCount++;
   }
 
   const nextReview = Date.now() + (interval * 24 * 60 * 60 * 1000);
 
-  srsData[card.q] = { interval, nextReview, repetitions, easeFactor };
+  // Mettre à jour et sauvegarder localement
+  srsData[currentCard.q] = { interval, nextReview, repetitions, easeFactor };
   saveSRSData(srsData);
 
-  card.interval = interval;
-  card.nextReview = nextReview;
-  card.repetitions = repetitions;
-  card.easeFactor = easeFactor;
+  currentCard.interval = interval;
+  currentCard.nextReview = nextReview;
+  currentCard.repetitions = repetitions;
+  currentCard.easeFactor = easeFactor;
 
   showToast(toastMsg);
-
-  if (currentIndex < filteredCards.length - 1) {
-    showCard(currentIndex + 1);
-  } else {
-    showCard(0);
-  }
+  nextCard();
 }
 
 function showToast(msg) {
   if (!toast) return;
   toast.textContent = msg;
   toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 2000);
+  setTimeout(() => toast.classList.add('hidden'), 1800);
 }
 
+// Événements boutons SRS
 btnAgain?.addEventListener('click', () => rateCard('again'));
 btnHard?.addEventListener('click', () => rateCard('hard'));
 btnEasy?.addEventListener('click', () => rateCard('easy'));
 
-prevBtn?.addEventListener('click', () => currentIndex > 0 && showCard(currentIndex - 1));
-nextBtn?.addEventListener('click', () => currentIndex < filteredCards.length - 1 && showCard(currentIndex + 1));
-
-randomBtn?.addEventListener('click', () => {
-  if (filteredCards.length <= 1) return;
-  let rand;
-  do { rand = Math.floor(Math.random() * filteredCards.length); } while (rand === currentIndex);
-  showCard(rand);
-});
-
+// Réinitialisation globale des cartes
 resetSrsBtn?.addEventListener('click', () => {
-  if (confirm("Réinitialiser l'historique de révision locale ?")) {
+  if (confirm("Voulez-vous réinitialiser toutes vos révisions ? Toutes les cartes repasseront à réviser aujourd'hui.")) {
     localStorage.removeItem('srs_capes_maths');
     location.reload();
   }
 });
 
-searchInput?.addEventListener('input', (e) => {
-  const query = e.target.value.toLowerCase();
-  filteredCards = allCards.filter(c =>
-    c.q.toLowerCase().includes(query) ||
-    c.r.toLowerCase().includes(query) ||
-    c.lecon.toLowerCase().includes(query)
-  );
-  showCard(0);
-});
-
+// Touche Espace pour révéler la réponse
 document.addEventListener('keydown', (e) => {
-  if (document.activeElement === searchInput) return;
   if (e.code === 'Space' && revealContainer && !revealContainer.classList.contains('hidden')) {
     e.preventDefault();
     revealBtn.click();

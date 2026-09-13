@@ -38,8 +38,8 @@ body {
 
 .app-header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .brand {
@@ -53,18 +53,21 @@ body {
   font-weight: 700;
 }
 
-.search-box input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 0.95rem;
-  outline: none;
-}
-
 .status-msg {
   text-align: center;
-  padding: 40px 0;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.done-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.margin-top {
+  margin-top: 20px;
 }
 
 .spinner {
@@ -88,27 +91,18 @@ body {
 }
 
 .counter-badge {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
 }
 
-.due-badge {
-  background-color: #fef3c7;
-  color: #d97706;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-left: 8px;
-}
-
 .action-btn {
-  background: none;
+  background: white;
   border: 1px solid var(--border-color);
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .text-danger {
@@ -231,25 +225,6 @@ body {
 .srs-time {
   font-size: 0.75rem;
   color: var(--text-muted);
-}
-
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 16px;
-}
-
-.nav-arrow {
-  background: none;
-  border: 1px solid var(--border-color);
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.nav-arrow:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .toast {

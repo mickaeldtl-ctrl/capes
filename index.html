@@ -5,7 +5,6 @@
   <title>Flashcards CAPES Mathématiques</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <!-- Bibliothèque PapaParse pour lire le CSV Google Sheets -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
@@ -16,27 +15,27 @@
         <span class="logo-icon">📐</span>
         <h1>Flashcards CAPES</h1>
       </div>
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="🔍 Rechercher une leçon, une question...">
-      </div>
     </header>
 
-    <!-- Écran de chargement / d'erreur -->
+    <!-- Écran de chargement -->
     <div id="loading" class="status-msg">
       <div class="spinner"></div>
-      <p id="loadingText">Chargement de vos cartes en cours...</p>
+      <p>Analyse de la file de révision...</p>
     </div>
 
-    <!-- Conteneur principal de l'application -->
+    <!-- Écran de fin de session (Si 0 carte due) -->
+    <div id="sessionDone" class="status-msg hidden">
+      <div class="done-icon">🎉</div>
+      <h2>Session terminée !</h2>
+      <p>Tu n'as plus aucune carte à réviser pour aujourd'hui. Reviens demain !</p>
+      <button id="resetSrsBtn" class="action-btn text-danger margin-top">🔄 Réinitialiser l'historique SRS</button>
+    </div>
+
+    <!-- Application principale (Session de révision) -->
     <main id="flashcardApp" class="hidden">
       <div class="deck-bar">
         <div class="deck-info">
-          <span id="counter" class="counter-badge">Carte 0 / 0</span>
-          <span id="dueBadge" class="due-badge hidden">⚠️ À réviser</span>
-        </div>
-        <div class="deck-actions">
-          <button id="randomBtn" class="action-btn" title="Carte aléatoire">🎲 Aléatoire</button>
-          <button id="resetSrsBtn" class="action-btn text-danger" title="Réinitialiser le suivi SRS">🔄 RàZ</button>
+          <span id="counter" class="counter-badge">Reste à réviser : --</span>
         </div>
       </div>
 
@@ -71,14 +70,14 @@
         </article>
       </div>
 
-      <!-- Module de répétition espacée (SRS) -->
+      <!-- Module d'évaluation SRS -->
       <div id="srsPanel" class="srs-container hidden">
         <p class="srs-instruction">Comment as-tu retenu cette carte ?</p>
         <div class="srs-actions">
           <button id="btnAgain" class="srs-btn btn-again">
             <span class="srs-emoji">🔴</span>
             <span class="srs-title">À revoir</span>
-            <span class="srs-time">&lt; 1 min</span>
+            <span class="srs-time">Reste aujourd'hui</span>
           </button>
           <button id="btnHard" class="srs-btn btn-hard">
             <span class="srs-emoji">🟠</span>
@@ -92,11 +91,6 @@
           </button>
         </div>
       </div>
-
-      <footer class="card-footer">
-        <button id="prevBtn" class="nav-arrow">← Précédente</button>
-        <button id="nextBtn" class="nav-arrow">Suivante →</button>
-      </footer>
     </main>
 
     <div id="toast" class="toast hidden"></div>

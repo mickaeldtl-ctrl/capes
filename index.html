@@ -32,6 +32,40 @@
     </div>
 
     <!-- Application principale (Session de révision) -->
+   <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Flashcards CAPES Mathématiques</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <span class="logo-icon">📐</span>
+        <h1>Flashcards CAPES</h1>
+      </div>
+    </header>
+
+    <!-- Écran de chargement -->
+    <div id="loading" class="status-msg">
+      <div class="spinner"></div>
+      <p>Analyse de la file de révision...</p>
+    </div>
+
+    <!-- Écran de fin de session (Si 0 carte due) -->
+    <div id="sessionDone" class="status-msg hidden">
+      <div class="done-icon">🎉</div>
+      <h2>Session terminée !</h2>
+      <p>Tu n'as plus aucune carte à réviser pour aujourd'hui. Reviens demain !</p>
+      <button id="resetSrsBtn" class="action-btn text-danger margin-top">🔄 Réinitialiser l'historique SRS</button>
+    </div>
+
+    <!-- Application principale (Session de révision) -->
     <main id="flashcardApp" class="hidden">
       <div class="deck-bar">
         <div class="deck-info">
@@ -69,6 +103,37 @@
           </div>
         </article>
       </div>
+
+      <!-- Module d'évaluation SRS -->
+      <div id="srsPanel" class="srs-container hidden">
+        <p class="srs-instruction">Comment as-tu retenu cette carte ?</p>
+        <div class="srs-actions">
+          <button id="btnAgain" class="srs-btn btn-again">
+            <span class="srs-emoji">🔴</span>
+            <span class="srs-title">À revoir</span>
+            <span class="srs-time">Reste aujourd'hui</span>
+          </button>
+          <button id="btnHard" class="srs-btn btn-hard">
+            <span class="srs-emoji">🟠</span>
+            <span class="srs-title">Difficile</span>
+            <span class="srs-time">Demain</span>
+          </button>
+          <button id="btnEasy" class="srs-btn btn-easy">
+            <span class="srs-emoji">🟢</span>
+            <span class="srs-title">Facile</span>
+            <span class="srs-time" id="easyIntervalText">+3 jours</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
 
       <!-- Module d'évaluation SRS -->
       <div id="srsPanel" class="srs-container hidden">

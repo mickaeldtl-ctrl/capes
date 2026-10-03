@@ -6,7 +6,7 @@ let currentDeck = [];
 let currentIndex = 0;
 let activeBox = 1;
 
-// Éléments DOM
+// DOM Elements
 const loadingEl = document.getElementById('loading');
 const appEl = document.getElementById('flashcardApp');
 const cardQuestion = document.getElementById('cardQuestion');
@@ -87,7 +87,8 @@ Papa.parse(SHEET_URL, {
         card.statut === "OK"
       );
 
-      loadingEl?.classList.add('hidden');
+      // Masque l'écran de chargement
+      if (loadingEl) loadingEl.style.display = 'none';
       appEl?.classList.remove('hidden');
 
       updateBoxCounters();
@@ -150,7 +151,7 @@ function showCard(index) {
   revealContainer?.classList.remove('hidden');
 
   if (cardQuestion) cardQuestion.textContent = card.q;
-  if (cardLesson) cardLesson.textContent = `Leçon : ${card.lecon} (Boîte ${card.box})`;
+  if (cardLesson) cardLesson.textContent = `Leçon : ${card.lecon}`;
   if (cardResponse) cardResponse.innerHTML = card.r;
 
   if (cardVideoContainer && cardVideo) {

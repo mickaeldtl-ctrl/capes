@@ -33,7 +33,7 @@ body {
   max-width: 680px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .app-header {
@@ -61,15 +61,6 @@ body {
   border: 1px solid var(--border-color);
 }
 
-.done-icon {
-  font-size: 3rem;
-  margin-bottom: 12px;
-}
-
-.margin-top {
-  margin-top: 20px;
-}
-
 .spinner {
   width: 32px;
   height: 32px;
@@ -84,10 +75,37 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* Onglets Leitner */
+.boxes-bar {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.box-tab {
+  flex: 1;
+  padding: 10px 4px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.box-tab.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
 .deck-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 4px;
 }
 
 .counter-badge {
@@ -98,7 +116,7 @@ body {
 .action-btn {
   background: white;
   border: 1px solid var(--border-color);
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.85rem;
@@ -189,7 +207,7 @@ body {
 }
 
 .srs-container {
-  margin-top: 16px;
+  margin-top: 12px;
   text-align: center;
 }
 
@@ -237,33 +255,6 @@ body {
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 0.85rem;
-}
-
-/* Style des onglets Leitner */
-.boxes-bar {
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.box-tab {
-  flex: 1;
-  padding: 10px 4px;
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.box-tab.active {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
 }
 
 .hidden {

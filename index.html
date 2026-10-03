@@ -20,57 +20,27 @@
     <!-- Écran de chargement -->
     <div id="loading" class="status-msg">
       <div class="spinner"></div>
-      <p>Analyse de la file de révision...</p>
+      <p>Chargement des flashcards...</p>
     </div>
 
-    <!-- Écran de fin de session (Si 0 carte due) -->
-    <div id="sessionDone" class="status-msg hidden">
-      <div class="done-icon">🎉</div>
-      <h2>Session terminée !</h2>
-      <p>Tu n'as plus aucune carte à réviser pour aujourd'hui. Reviens demain !</p>
-      <button id="resetSrsBtn" class="action-btn text-danger margin-top">🔄 Réinitialiser l'historique SRS</button>
-    </div>
-
-    <!-- Application principale (Session de révision) -->
-   <!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Flashcards CAPES Mathématiques</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-</head>
-<body>
-
-  <div class="app-container">
-    <header class="app-header">
-      <div class="brand">
-        <span class="logo-icon">📐</span>
-        <h1>Flashcards CAPES</h1>
-      </div>
-    </header>
-
-    <!-- Écran de chargement -->
-    <div id="loading" class="status-msg">
-      <div class="spinner"></div>
-      <p>Analyse de la file de révision...</p>
-    </div>
-
-    <!-- Écran de fin de session (Si 0 carte due) -->
-    <div id="sessionDone" class="status-msg hidden">
-      <div class="done-icon">🎉</div>
-      <h2>Session terminée !</h2>
-      <p>Tu n'as plus aucune carte à réviser pour aujourd'hui. Reviens demain !</p>
-      <button id="resetSrsBtn" class="action-btn text-danger margin-top">🔄 Réinitialiser l'historique SRS</button>
-    </div>
-
-    <!-- Application principale (Session de révision) -->
+    <!-- Application principale -->
     <main id="flashcardApp" class="hidden">
+      <!-- Sélection des 3 boîtes Leitner -->
+      <div class="boxes-bar">
+        <button class="box-tab active" id="box-tab-1" onclick="selectBox(1)">
+          B1 (<span id="box-count-1">0</span>)
+        </button>
+        <button class="box-tab" id="box-tab-2" onclick="selectBox(2)">
+          B2 (<span id="box-count-2">0</span>)
+        </button>
+        <button class="box-tab" id="box-tab-3" onclick="selectBox(3)">
+          B3 (<span id="box-count-3">0</span>)
+        </button>
+      </div>
+
       <div class="deck-bar">
-        <div class="deck-info">
-          <span id="counter" class="counter-badge">Reste à réviser : --</span>
-        </div>
+        <span id="counter" class="counter-badge">Carte 0 / 0</span>
+        <button id="resetSrsBtn" class="action-btn text-danger">🔄 RàZ Boîtes</button>
       </div>
 
       <div class="card-deck">
@@ -104,55 +74,24 @@
         </article>
       </div>
 
-      <!-- Module d'évaluation SRS -->
+      <!-- Évaluation -->
       <div id="srsPanel" class="srs-container hidden">
         <p class="srs-instruction">Comment as-tu retenu cette carte ?</p>
         <div class="srs-actions">
           <button id="btnAgain" class="srs-btn btn-again">
             <span class="srs-emoji">🔴</span>
             <span class="srs-title">À revoir</span>
-            <span class="srs-time">Reste aujourd'hui</span>
+            <span class="srs-time">Retour B1</span>
           </button>
           <button id="btnHard" class="srs-btn btn-hard">
             <span class="srs-emoji">🟠</span>
             <span class="srs-title">Difficile</span>
-            <span class="srs-time">Demain</span>
+            <span class="srs-time">Maintien</span>
           </button>
           <button id="btnEasy" class="srs-btn btn-easy">
             <span class="srs-emoji">🟢</span>
             <span class="srs-title">Facile</span>
-            <span class="srs-time" id="easyIntervalText">+3 jours</span>
-          </button>
-        </div>
-      </div>
-    </main>
-
-    <div id="toast" class="toast hidden"></div>
-  </div>
-
-  <script src="app.js"></script>
-</body>
-</html>
-
-
-      <!-- Module d'évaluation SRS -->
-      <div id="srsPanel" class="srs-container hidden">
-        <p class="srs-instruction">Comment as-tu retenu cette carte ?</p>
-        <div class="srs-actions">
-          <button id="btnAgain" class="srs-btn btn-again">
-            <span class="srs-emoji">🔴</span>
-            <span class="srs-title">À revoir</span>
-            <span class="srs-time">Reste aujourd'hui</span>
-          </button>
-          <button id="btnHard" class="srs-btn btn-hard">
-            <span class="srs-emoji">🟠</span>
-            <span class="srs-title">Difficile</span>
-            <span class="srs-time">Demain</span>
-          </button>
-          <button id="btnEasy" class="srs-btn btn-easy">
-            <span class="srs-emoji">🟢</span>
-            <span class="srs-title">Facile</span>
-            <span class="srs-time" id="easyIntervalText">+3 jours</span>
+            <span class="srs-time">Boîte +1</span>
           </button>
         </div>
       </div>

@@ -1,11 +1,10 @@
-// URL du Google Sheets
 const SPREADSHEET_ID = "1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o";
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
 
 let allCards = [];
 let currentDeck = [];
 let currentIndex = 0;
-let activeBox = 1; // Boîte active par défaut
+let activeBox = 1;
 
 // Éléments DOM
 const loadingEl = document.getElementById('loading');
@@ -27,7 +26,6 @@ const btnAgain = document.getElementById('btnAgain');
 const btnHard = document.getElementById('btnHard');
 const btnEasy = document.getElementById('btnEasy');
 
-// Gestion du stockage local Leitner
 function getLeitnerData() {
   try {
     return JSON.parse(localStorage.getItem('leitner_capes_maths') || '{}');
@@ -40,7 +38,7 @@ function saveLeitnerData(data) {
   try {
     localStorage.setItem('leitner_capes_maths', JSON.stringify(data));
   } catch (e) {
-    console.error("Erreur de sauvegarde locale:", e);
+    console.error("Erreur de sauvegarde :", e);
   }
 }
 
@@ -49,7 +47,6 @@ function sanitizeText(val) {
   return String(val).trim().replace(/^"|"$/g, '');
 }
 
-// Chargement CSV avec PapaParse
 Papa.parse(SHEET_URL, {
   download: true,
   header: false,
@@ -58,7 +55,7 @@ Papa.parse(SHEET_URL, {
     try {
       const rows = results.data;
       if (!rows || rows.length <= 1) {
-        showError("Aucune donnée disponible.");
+        showError("Aucune donnée trouvée.");
         return;
       }
 
@@ -73,7 +70,6 @@ Papa.parse(SHEET_URL, {
         const statut = sanitizeText(row[3]).toUpperCase();
         const video = sanitizeText(row[4]);
 
-        // Boîte 1 par défaut pour toute nouvelle carte
         const box = leitnerData[question] || 1;
 
         return {
@@ -95,14 +91,14 @@ Papa.parse(SHEET_URL, {
       appEl?.classList.remove('hidden');
 
       updateBoxCounters();
-      selectBox(1); // Démarre sur la Boîte 1
+      selectBox(1);
 
     } catch (err) {
-      showError("Erreur d'exécution : " + err.message);
+      showError("Erreur : " + err.message);
     }
   },
   error: function() {
-    showError("Impossible d'accéder au CSV.");
+    showError("Impossible d'accéder au fichier Google Sheets.");
   }
 });
 
@@ -112,23 +108,22 @@ function showError(msg) {
   }
 }
 
-// Mise à jour des compteurs de chaque boîte
 function updateBoxCounters() {
-  const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  allCards.forEach(c => { counts[c.box] = (counts[c.box] || 0) + 1; });
+  const counts = { 1: 0, 2: 0, 3: 0 };
+  allCards.forEach(c => { 
+    if (counts[c.box] !== undefined) counts[c.box]++; 
+  });
 
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 3; i++) {
     const el = document.getElementById(`box-count-${i}`);
     if (el) el.textContent = counts[i];
   }
 }
 
-// Filtrer le paquet selon la boîte sélectionnée
 function selectBox(boxNumber) {
   activeBox = boxNumber;
   currentDeck = allCards.filter(c => c.box === activeBox);
   
-  // Highlight visuel sur la boîte active
   document.querySelectorAll('.box-tab').forEach(tab => tab.classList.remove('active'));
   document.getElementById(`box-tab-${boxNumber}`)?.classList.add('active');
 
@@ -184,13 +179,12 @@ function rateCard(quality) {
   let oldBox = card.box;
 
   if (quality === 'again') {
-    card.box = 1; // Retour direct en boîte 1
+    card.box = 1;
     showToast("🔴 Retour en Boîte 1");
   } else if (quality === 'hard') {
-    // Reste dans la boîte actuelle
     showToast(`🟠 Maintien en Boîte ${card.box}`);
   } else if (quality === 'easy') {
-    card.box = Math.min(5, card.box + 1); // Monte d'une boîte (max 5)
+    card.box = Math.min(3, card.box + 1);
     showToast(`🟢 Passage en Boîte ${card.box}`);
   }
 
@@ -199,7 +193,6 @@ function rateCard(quality) {
 
   updateBoxCounters();
 
-  // Si la carte a changé de boîte, elle quitte la vue actuelle
   if (card.box !== oldBox) {
     currentDeck.splice(currentIndex, 1);
     if (currentIndex >= currentDeck.length) {
@@ -207,7 +200,6 @@ function rateCard(quality) {
     }
     showCard(currentIndex);
   } else {
-    // Si la carte reste, passe à la suivante
     if (currentIndex < currentDeck.length - 1) {
       showCard(currentIndex + 1);
     } else {
@@ -228,7 +220,7 @@ btnHard?.addEventListener('click', () => rateCard('hard'));
 btnEasy?.addEventListener('click', () => rateCard('easy'));
 
 resetSrsBtn?.addEventListener('click', () => {
-  if (confirm("Réinitialiser toutes les cartes en Boîte 1 ?")) {
+  if (confirm("Réinitialiser toutes les cartes et les remettre en Boîte 1 ?")) {
     localStorage.removeItem('leitner_capes_maths');
     location.reload();
   }

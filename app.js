@@ -1,16 +1,66 @@
 const SPREADSHEET_ID = "1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o";
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
 
+// Dictionnaire officiel Leçons & Thèmes du CAPES
+const LESSONS_MAP = {
+  1: { title: "1. Exemples de dénombrements dans différentes situations.", theme: "Dénombrements, proba, stats" },
+  2: { title: "2. Expérience aléatoire, probabilité, probabilité conditionnelle.", theme: "Dénombrements, proba, stats" },
+  3: { title: "3. Variables aléatoires discrètes.", theme: "Dénombrements, proba, stats" },
+  4: { title: "4. Variables aléatoires réelles à densité.", theme: "Dénombrements, proba, stats" },
+  5: { title: "5. Statistique à une ou deux variables, représentation et analyse de données.", theme: "Dénombrements, proba, stats" },
+  6: { title: "6. Multiples et diviseurs dans N, nombres premiers.", theme: "Arithmétique" },
+  7: { title: "7. PGCD dans Z.", theme: "Arithmétique" },
+  8: { title: "8. Congruences dans Z.", theme: "Arithmétique" },
+  9: { title: "9. Différentes écritures d’un nombre complexe.", theme: "Nombres complexes" },
+  10: { title: "10. Utilisation des nombres complexes en géométrie.", theme: "Nombres complexes" },
+  11: { title: "11. Trigonométrie.", theme: "Géométrie" },
+  12: { title: "12. Repérage dans le plan, dans l’espace, sur une sphère.", theme: "Géométrie" },
+  13: { title: "13. Droites et plans dans l’espace.", theme: "Géométrie" },
+  14: { title: "14. Transformations du plan. Frises et pavages.", theme: "Géométrie" },
+  15: { title: "15. Relations métriques et angulaires dans le triangle.", theme: "Géométrie" },
+  16: { title: "16. Solides de l’espace : représentations et calculs de volumes.", theme: "Géométrie" },
+  17: { title: "17. Périmètres, aires, volumes.", theme: "Géométrie" },
+  18: { title: "18. Exemples de résolution de problèmes de géométrie plane à l’aide des vecteurs.", theme: "Géométrie" },
+  19: { title: "19. Produit scalaire dans le plan.", theme: "Géométrie" },
+  20: { title: "20. Applications de la notion de proportionnalité à la géométrie.", theme: "Proportionnalité et pourcentages" },
+  21: { title: "21. Problèmes de constructions géométriques.", theme: "Géométrie" },
+  22: { title: "22. Exemples de problèmes d’alignement, de parallélisme.", theme: "Géométrie" },
+  23: { title: "23. Exemples de problèmes d’intersection en géométrie.", theme: "Géométrie" },
+  24: { title: "24. Pourcentages et taux d’évolution.", theme: "Proportionnalité et pourcentages" },
+  25: { title: "25. Problèmes conduisant à une modélisation par des équations ou des inéquations.", theme: "Équations" },
+  26: { title: "26. Problèmes conduisant à une modélisation par des graphes, par des matrices.", theme: "Graphes et matrices" },
+  27: { title: "27. Fonctions polynômes du second degré. Équations et inéquations du second degré.", theme: "Équations" },
+  28: { title: "28. Suites numériques. Limites.", theme: "Analyse" },
+  29: { title: "29. Suites définies par récurrence un+1 = f(un).", theme: "Analyse" },
+  30: { title: "30. Détermination de limites de fonctions réelles de variable réelle.", theme: "Analyse" },
+  31: { title: "31. Théorème des valeurs intermédiaires.", theme: "Analyse" },
+  32: { title: "32. Nombre dérivé. Fonction dérivée.", theme: "Analyse" },
+  33: { title: "33. Fonctions exponentielles.", theme: "Analyse" },
+  34: { title: "34. Fonctions logarithmes.", theme: "Analyse" },
+  35: { title: "35. Fonctions convexes.", theme: "Analyse" },
+  36: { title: "36. Primitives, équations différentielles.", theme: "Analyse" },
+  37: { title: "37. Intégrales, primitives.", theme: "Analyse" },
+  38: { title: "38. Exemples de calculs d’intégrales (méthodes exactes, méthodes approchées).", theme: "Analyse" },
+  39: { title: "39. Exemples de résolution d’équations (méthodes exactes, méthodes approchées).", theme: "Équations" },
+  40: { title: "40. Exemples de modèles d’évolution.", theme: "Analyse" },
+  41: { title: "41. Problèmes dont la résolution fait intervenir un algorithme.", theme: "Méthodologie & Modélisation" },
+  42: { title: "42. Différents types de raisonnement en mathématiques.", theme: "Méthodologie & Modélisation" },
+  43: { title: "43. Exemples d’approche historique de notions mathématiques enseignées au collège, au lycée.", theme: "Méthodologie & Modélisation" },
+  44: { title: "44. Applications des mathématiques à d’autres disciplines.", theme: "Méthodologie & Modélisation" }
+};
+
 let allCards = [];
 let currentDeck = [];
 let currentIndex = 0;
 let activeBox = 1;
+let selectedTheme = "ALL";
 
-// DOM Elements
+// Éléments du DOM
 const loadingEl = document.getElementById('loading');
 const appEl = document.getElementById('flashcardApp');
 const cardQuestion = document.getElementById('cardQuestion');
 const cardLesson = document.getElementById('cardLesson');
+const cardTheme = document.getElementById('cardTheme');
 const answerSection = document.getElementById('answerSection');
 const cardResponse = document.getElementById('cardResponse');
 const cardVideoContainer = document.getElementById('cardVideoContainer');
@@ -20,6 +70,7 @@ const revealBtn = document.getElementById('revealBtn');
 const srsPanel = document.getElementById('srsPanel');
 const counterEl = document.getElementById('counter');
 const resetSrsBtn = document.getElementById('resetSrsBtn');
+const themeFilter = document.getElementById('themeFilter');
 const toast = document.getElementById('toast');
 
 const btnAgain = document.getElementById('btnAgain');
@@ -47,6 +98,21 @@ function sanitizeText(val) {
   return String(val).trim().replace(/^"|"$/g, '');
 }
 
+// Rendu LaTeX avec KaTeX
+function renderMath(element) {
+  if (window.renderMathInElement && element) {
+    renderMathInElement(element, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\(', right: '\\)', display: false},
+        {left: '\\[', right: '\\]', display: true}
+      ],
+      throwOnError: false
+    });
+  }
+}
+
 Papa.parse(SHEET_URL, {
   download: true,
   header: false,
@@ -65,16 +131,30 @@ Papa.parse(SHEET_URL, {
         if (!Array.isArray(row)) return null;
 
         const question = sanitizeText(row[0]);
-        const lecon = sanitizeText(row[1]) || 'Non spécifiée';
+        const leconRaw = sanitizeText(row[1]);
         const reponse = sanitizeText(row[2]) || 'Pas de réponse.';
         const statut = sanitizeText(row[3]).toUpperCase();
         const video = sanitizeText(row[4]);
+
+        // Extraction du numéro de leçon
+        const leconNum = parseInt(leconRaw, 10);
+        let leconTitle = `Leçon ${leconRaw}`;
+        let themeName = "Général";
+
+        if (LESSONS_MAP[leconNum]) {
+          leconTitle = LESSONS_MAP[leconNum].title;
+          themeName = LESSONS_MAP[leconNum].theme;
+        } else if (leconRaw) {
+          leconTitle = leconRaw;
+        }
 
         const box = leitnerData[question] || 1;
 
         return {
           q: question,
-          lecon: lecon,
+          leconNum: leconNum || 0,
+          lecon: leconTitle,
+          theme: themeName,
           r: reponse,
           statut: statut,
           video: video,
@@ -87,12 +167,11 @@ Papa.parse(SHEET_URL, {
         card.statut === "OK"
       );
 
-      // Masque l'écran de chargement
       if (loadingEl) loadingEl.style.display = 'none';
       appEl?.classList.remove('hidden');
 
       updateBoxCounters();
-      selectBox(1);
+      filterAndSelectDeck();
 
     } catch (err) {
       showError("Erreur : " + err.message);
@@ -111,7 +190,12 @@ function showError(msg) {
 
 function updateBoxCounters() {
   const counts = { 1: 0, 2: 0, 3: 0 };
-  allCards.forEach(c => { 
+  
+  const filtered = selectedTheme === "ALL" 
+    ? allCards 
+    : allCards.filter(c => c.theme === selectedTheme);
+
+  filtered.forEach(c => { 
     if (counts[c.box] !== undefined) counts[c.box]++; 
   });
 
@@ -121,21 +205,43 @@ function updateBoxCounters() {
   }
 }
 
+function filterAndSelectDeck() {
+  currentDeck = allCards.filter(c => c.box === activeBox && (selectedTheme === "ALL" || c.theme === selectedTheme));
+  showCard(0);
+}
+
 function selectBox(boxNumber) {
   activeBox = boxNumber;
-  currentDeck = allCards.filter(c => c.box === activeBox);
-  
   document.querySelectorAll('.box-tab').forEach(tab => tab.classList.remove('active'));
   document.getElementById(`box-tab-${boxNumber}`)?.classList.add('active');
+  filterAndSelectDeck();
+}
 
+function onThemeChange() {
+  selectedTheme = themeFilter.value;
+  updateBoxCounters();
+  filterAndSelectDeck();
+}
+
+function shuffleDeck() {
+  if (currentDeck.length <= 1) return;
+  
+  // Algorithme de mélange Fisher-Yates
+  for (let i = currentDeck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [currentDeck[i], currentDeck[j]] = [currentDeck[j], currentDeck[i]];
+  }
+  
+  showToast("🔀 Paquet mélangé !");
   showCard(0);
 }
 
 function showCard(index) {
   if (currentDeck.length === 0) {
-    if (cardQuestion) cardQuestion.textContent = `Aucune carte dans la Boîte ${activeBox}.`;
+    if (cardQuestion) cardQuestion.textContent = `Aucune carte disponible.`;
     if (cardResponse) cardResponse.textContent = "";
     if (cardLesson) cardLesson.textContent = "Leçon --";
+    if (cardTheme) cardTheme.textContent = "Thème --";
     if (counterEl) counterEl.textContent = "0 / 0";
     answerSection?.classList.add('hidden');
     srsPanel?.classList.add('hidden');
@@ -150,9 +256,18 @@ function showCard(index) {
   srsPanel?.classList.add('hidden');
   revealContainer?.classList.remove('hidden');
 
-  if (cardQuestion) cardQuestion.textContent = card.q;
-  if (cardLesson) cardLesson.textContent = `Leçon : ${card.lecon}`;
-  if (cardResponse) cardResponse.innerHTML = card.r;
+  if (cardQuestion) {
+    cardQuestion.textContent = card.q;
+    renderMath(cardQuestion);
+  }
+
+  if (cardLesson) cardLesson.textContent = card.lecon;
+  if (cardTheme) cardTheme.textContent = card.theme;
+
+  if (cardResponse) {
+    cardResponse.innerHTML = card.r;
+    renderMath(cardResponse);
+  }
 
   if (cardVideoContainer && cardVideo) {
     if (card.video && card.video.startsWith('http')) {

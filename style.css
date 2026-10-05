@@ -21,7 +21,7 @@ body {
   display: flex;
   justify-content: center;
   min-height: 100vh;
-  padding: 20px;
+  padding: 16px;
 }
 
 .app-container {
@@ -29,19 +29,13 @@ body {
   max-width: 680px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .brand h1 {
@@ -71,7 +65,7 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Onglets Leitner */
+/* Onglets Boîtes */
 .boxes-bar {
   display: flex;
   gap: 8px;
@@ -97,6 +91,24 @@ body {
   border-color: var(--primary);
 }
 
+/* Barre de filtres et d'outils */
+.controls-bar {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-select {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  outline: none;
+}
+
 .deck-bar {
   display: flex;
   justify-content: space-between;
@@ -106,6 +118,7 @@ body {
 .counter-badge {
   font-weight: 700;
   color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 .action-btn {
@@ -122,11 +135,12 @@ body {
   color: #dc2626;
 }
 
+/* Flashcard */
 .flashcard {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   min-height: 220px;
   display: flex;
@@ -134,15 +148,29 @@ body {
   justify-content: space-between;
 }
 
+.card-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
 .badge-lesson {
-  display: inline-block;
   background: #eff6ff;
   color: var(--primary);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   padding: 4px 10px;
   border-radius: 20px;
-  margin-bottom: 16px;
+}
+
+.badge-theme {
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 20px;
 }
 
 .section-label {
@@ -155,15 +183,15 @@ body {
 }
 
 .question-text {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .divider {
   border: none;
   border-top: 1px solid var(--border-color);
-  margin: 20px 0;
+  margin: 16px 0;
 }
 
 .answer-text {
@@ -173,7 +201,7 @@ body {
 }
 
 .video-box {
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .video-btn {
@@ -181,7 +209,7 @@ body {
   color: var(--primary);
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .btn-reveal {
@@ -191,10 +219,10 @@ body {
   border: none;
   padding: 12px;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .btn-reveal:hover {
@@ -202,20 +230,20 @@ body {
 }
 
 .srs-container {
-  margin-top: 12px;
+  margin-top: 10px;
   text-align: center;
 }
 
 .srs-instruction {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .srs-actions {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .srs-btn {
@@ -231,12 +259,12 @@ body {
 
 .srs-title {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   margin-top: 2px;
 }
 
 .srs-time {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
 }
 

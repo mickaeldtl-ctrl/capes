@@ -138,10 +138,9 @@ Papa.parse(SHEET_URL, {
 
         if (!question || question.toLowerCase() === "questions") return null;
 
-        // Extraction tolérante des numéros de leçons (ex: "9, 10" ou "9")
-        const leconNums = leconRaw.split(',')
-          .map(n => parseInt(n.trim(), 10))
-          .filter(n => !isNaN(n));
+        // Extraction ultra-blindée : isole tous les nombres isolés par des virgules ou espaces
+        const matches = leconRaw.match(/\d+/g);
+        const leconNums = matches ? matches.map(n => parseInt(n, 10)) : [];
 
         let leconTitles = [];
         let cardThemes = new Set();

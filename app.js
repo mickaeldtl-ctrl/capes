@@ -98,7 +98,7 @@ function sanitizeText(val) {
   return String(val).trim().replace(/^"|"$/g, '');
 }
 
-// Rendu LaTeX avec KaTeX
+// Rendu LaTeX via KaTeX
 function renderMath(element) {
   if (window.renderMathInElement && element) {
     renderMathInElement(element, {
@@ -136,24 +136,30 @@ Papa.parse(SHEET_URL, {
         const statut = sanitizeText(row[3]).toUpperCase();
         const video = sanitizeText(row[4]);
 
-        // Extraction du numéro de leçon
-        const leconNum = parseInt(leconRaw, 10);
-        let leconTitle = `Leçon ${leconRaw}`;
-        let themeName = "Général";
+        // Gestion de plusieurs leçons séparées par des virgules (ex: "9, 10")
+        const leconNums = leconRaw.split(',').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n));
 
-        if (LESSONS_MAP[leconNum]) {
-          leconTitle = LESSONS_MAP[leconNum].title;
-          themeName = LESSONS_MAP[leconNum].theme;
-        } else if (leconRaw) {
-          leconTitle = leconRaw;
-        }
+        let leconTitles = [];
+        let cardThemes = new Set();
+
+        leconNums.forEach(num => {
+          if (LESSONS_MAP[num]) {
+            leconTitles.push(LESSONS_MAP[num].title);
+            cardThemes.add(LESSONS_MAP[num].theme);
+          }
+        });
+
+        const leconTitle = leconTitles.length > 0 ? leconTitles.join(" | ") : (leconRaw || 'Leçon --');
+        const themeArray = Array.from(cardThemes);
+        const themeName = themeArray.length > 0 ? themeArray.join(" / ") : "Général";
 
         const box = leitnerData[question] || 1;
 
         return {
           q: question,
-          leconNum: leconNum || 0,
+          leconNums: leconNums,
           lecon: leconTitle,
+          themeArray: themeArray,
           theme: themeName,
           r: reponse,
           statut: statut,
@@ -193,7 +199,7 @@ function updateBoxCounters() {
   
   const filtered = selectedTheme === "ALL" 
     ? allCards 
-    : allCards.filter(c => c.theme === selectedTheme);
+    : allCards.filter(c => Array.isArray(c.themeArray) && c.themeArray.includes(selectedTheme));
 
   filtered.forEach(c => { 
     if (counts[c.box] !== undefined) counts[c.box]++; 
@@ -206,7 +212,12 @@ function updateBoxCounters() {
 }
 
 function filterAndSelectDeck() {
-  currentDeck = allCards.filter(c => c.box === activeBox && (selectedTheme === "ALL" || c.theme === selectedTheme));
+  currentDeck = allCards.filter(c => {
+    const matchBox = c.box === activeBox;
+    const matchTheme = (selectedTheme === "ALL") || 
+                       (Array.isArray(c.themeArray) && c.themeArray.includes(selectedTheme));
+    return matchBox && matchTheme;
+  });
   showCard(0);
 }
 
@@ -224,14 +235,11 @@ function onThemeChange() {
 }
 
 function shuffleDeck() {
-  if (currentDeck.length <= 1) return;
-  
-  // Algorithme de mélange Fisher-Yates
+  if (currentDeck.length <= 1) return;  
   for (let i = currentDeck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [currentDeck[i], currentDeck[j]] = [currentDeck[j], currentDeck[i]];
-  }
-  
+  }  
   showToast("🔀 Paquet mélangé !");
   showCard(0);
 }

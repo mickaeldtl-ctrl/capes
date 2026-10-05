@@ -128,7 +128,7 @@ Papa.parse(SHEET_URL, {
       const leitnerData = getLeitnerData();
 
       allCards = rows.slice(1).map((row) => {
-        if (!Array.isArray(row)) return null;
+        if (!Array.isArray(row) || row.length < 1) return null;
 
         const question = sanitizeText(row[0]);
         const leconRaw = sanitizeText(row[1]);
@@ -136,8 +136,12 @@ Papa.parse(SHEET_URL, {
         const statut = sanitizeText(row[3]).toUpperCase();
         const video = sanitizeText(row[4]);
 
-        // Gestion de plusieurs leçons séparées par des virgules (ex: "9, 10")
-        const leconNums = leconRaw.split(',').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n));
+        if (!question || question.toLowerCase() === "questions") return null;
+
+        // Extraction tolérante des numéros de leçons (ex: "9, 10" ou "9")
+        const leconNums = leconRaw.split(',')
+          .map(n => parseInt(n.trim(), 10))
+          .filter(n => !isNaN(n));
 
         let leconTitles = [];
         let cardThemes = new Set();
@@ -166,12 +170,7 @@ Papa.parse(SHEET_URL, {
           video: video,
           box: box
         };
-      }).filter(card => 
-        card !== null && 
-        card.q.length > 0 && 
-        card.q.toLowerCase() !== "questions" && 
-        card.statut === "OK"
-      );
+      }).filter(card => card !== null && card.q.length > 0);
 
       if (loadingEl) loadingEl.style.display = 'none';
       appEl?.classList.remove('hidden');

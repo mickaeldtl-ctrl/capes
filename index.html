@@ -5,7 +5,14 @@
   <title>Flashcards CAPES Mathématiques</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  
+  <!-- Parser CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <!-- KaTeX pour le rendu LaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 </head>
 <body>
 
@@ -25,6 +32,7 @@
 
     <!-- Application principale -->
     <main id="flashcardApp" class="hidden">
+      
       <!-- Onglets des 3 boîtes Leitner -->
       <div class="boxes-bar">
         <button class="box-tab active" id="box-tab-1" onclick="selectBox(1)">
@@ -38,6 +46,26 @@
         </button>
       </div>
 
+      <!-- Barre d'outils (Filtre par thème + Mélanger + RàZ) -->
+      <div class="controls-bar">
+        <select id="themeFilter" class="filter-select" onchange="onThemeChange()">
+          <option value="ALL">Tous les thèmes</option>
+          <option value="Dénombrements, proba, stats">Dénombrements, proba, stats</option>
+          <option value="Arithmétique">Arithmétique</option>
+          <option value="Nombres complexes">Nombres complexes</option>
+          <option value="Géométrie">Géométrie</option>
+          <option value="Proportionnalité et pourcentages">Proportionnalité & pourcentages</option>
+          <option value="Équations">Équations</option>
+          <option value="Graphes et matrices">Graphes & matrices</option>
+          <option value="Analyse">Analyse</option>
+          <option value="Méthodologie & Modélisation">Méthodologie & Modélisation</option>
+        </select>
+
+        <button id="shuffleBtn" class="action-btn" onclick="shuffleDeck()" title="Mélanger le paquet">
+          🔀 Mélanger
+        </button>
+      </div>
+
       <div class="deck-bar">
         <span id="counter" class="counter-badge">Carte 0 / 0</span>
         <button id="resetSrsBtn" class="action-btn text-danger">🔄 RàZ Boîtes</button>
@@ -47,6 +75,7 @@
         <article class="flashcard">
           <div class="card-top">
             <span class="badge-lesson" id="cardLesson">Leçon --</span>
+            <span class="badge-theme" id="cardTheme">Thème --</span>
           </div>
 
           <div class="card-content">

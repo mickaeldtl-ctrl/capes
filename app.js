@@ -115,35 +115,30 @@ function renderMath(element) {
 
 Papa.parse(SHEET_URL, {
   download: true,
-  header: true,
+  header: false,
   skipEmptyLines: true,
   complete: function(results) {
     try {
       const rows = results.data;
-      if (!rows || rows.length === 0) {
+      if (!rows || rows.length <= 1) {
         showError("Aucune donnée trouvée.");
         return;
       }
 
       const leitnerData = getLeitnerData();
 
-      allCards = rows.map((row) => {
-        const keys = Object.keys(row);
-        const qKey = keys.find(k => k.toLowerCase().includes('question')) || keys[0];
-        const lKey = keys.find(k => k.toLowerCase().includes('leçon') || k.toLowerCase().includes('lecon')) || keys[1];
-        const rKey = keys.find(k => k.toLowerCase().includes('réponse') || k.toLowerCase().includes('reponse')) || keys[2];
-        const sKey = keys.find(k => k.toLowerCase().includes('statut') || k.toLowerCase().includes('ok') || k.toLowerCase().includes('valide')) || keys[3];
-        const vKey = keys.find(k => k.toLowerCase().includes('vidéo') || k.toLowerCase().includes('video')) || keys[4];
+      allCards = rows.slice(1).map((row) => {
+        if (!Array.isArray(row) || row.length < 1) return null;
 
-        const question = sanitizeText(row[qKey]);
-        const leconRaw = sanitizeText(row[lKey]);
-        const reponse = sanitizeText(row[rKey]) || 'Pas de réponse.';
-        const statut = sanitizeText(row[sKey]).toUpperCase();
-        const video = sanitizeText(row[vKey]);
+        const question = sanitizeText(row[0]);
+        const leconRaw = sanitizeText(row[1]);
+        const reponse = sanitizeText(row[2]) || 'Pas de réponse.';
+        const statut = sanitizeText(row[3]).toUpperCase();
+        const video = sanitizeText(row[4]);
 
         if (!question || question.toLowerCase() === "questions") return null;
 
-        // Extraction tolérante des numéros de leçons
+        // Extraction tolérante des leçons (ex: "11 - 12 - 15")
         const matches = leconRaw.match(/\d+/g);
         const leconNums = matches ? matches.map(n => parseInt(n, 10)) : [];
 
@@ -174,11 +169,12 @@ Papa.parse(SHEET_URL, {
           video: video,
           box: box
         };
-      }).filter(card => 
-        card !== null && 
-        card.q.length > 0 && 
-        (card.statut === "TRUE" || card.statut === "OK") // Vérifie la case à cocher (TRUE) ou OK
-      );
+      }).filter(card => {
+        if (!card || !card.q || card.q.length === 0) return false;
+        // Accepte TRUE, OK, VRAI ou 1 dans la colonne Statut
+        const s = card.statut;
+        return s === "TRUE" || s === "OK" || s === "VRAI" || s === "1";
+      });
 
       if (loadingEl) loadingEl.style.display = 'none';
       appEl?.classList.remove('hidden');

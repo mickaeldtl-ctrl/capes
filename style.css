@@ -107,8 +107,9 @@ main {
 .box-2 { --c: var(--b2); }
 .box-3 { --c: var(--b3); }
 
-.box-name { font-size: 0.78rem; font-weight: 600; }
-.box-count { font-size: 1.3rem; font-weight: 700; color: var(--ink); line-height: 1.1; }
+.box-tab { gap: 6px; }
+.box-count { order: -1; display: block; font-size: 1.5rem; font-weight: 700; color: var(--ink); line-height: 1; }
+.box-name { display: block; font-size: 0.78rem; font-weight: 600; }
 
 .box-tab:hover { background: #f8f9fc; }
 

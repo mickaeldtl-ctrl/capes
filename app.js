@@ -1,5 +1,10 @@
 const SPREADSHEET_ID = "1Z2hVDXoz7qH7f0SEGlHhmLc7YU53FmR9CxgCCu9Su5o";
+// Pour forcer un onglet précis, ajoute &sheet=NomDeLOnglet ou &gid=123456 à la fin
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
+
+// true  = ne garder que les cartes dont la colonne D (Statut) est validée
+// false = garder toutes les cartes ayant une question
+const REQUIRE_STATUS = true;
 
 // Dictionnaire officiel Leçons & Thèmes du CAPES
 const LESSONS_MAP = {
@@ -98,6 +103,18 @@ function sanitizeText(val) {
   return String(val).trim().replace(/^"|"$/g, '');
 }
 
+// Normalise le statut : majuscules, sans accents, sans espaces
+function normalizeStatus(val) {
+  return sanitizeText(val)
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+}
+
+function isValidStatus(s) {
+  return ["TRUE", "OK", "VRAI", "1", "OUI", "YES", "X", "✓", "✔", "VALIDE"].includes(s);
+}
+
 // Rendu LaTeX via KaTeX
 function renderMath(element) {
   if (window.renderMathInElement && element) {
@@ -113,6 +130,12 @@ function renderMath(element) {
   }
 }
 
+// KaTeX est chargé en "defer" : on re-rend la carte courante quand tout est prêt
+window.addEventListener('load', () => {
+  renderMath(cardQuestion);
+  renderMath(cardResponse);
+});
+
 Papa.parse(SHEET_URL, {
   download: true,
   header: false,
@@ -120,20 +143,34 @@ Papa.parse(SHEET_URL, {
   complete: function(results) {
     try {
       const rows = results.data;
+
+      // --- Diagnostic (visible dans la console F12) ---
+      console.log("[Flashcards] Nb de lignes reçues :", rows ? rows.length : 0);
+      console.log("[Flashcards] En-tête :", rows && rows[0]);
+      console.log("[Flashcards] Valeurs distinctes colonne D :",
+        [...new Set((rows || []).slice(1).map(r => r[3]))]);
+
       if (!rows || rows.length <= 1) {
         showError("Aucune donnée trouvée.");
         return;
       }
 
+      // Si Google renvoie une page HTML (Sheet non partagé), on le détecte
+      const firstCell = String(rows[0][0] || '').toLowerCase();
+      if (firstCell.includes('<!doctype') || firstCell.includes('<html')) {
+        showError("Le Google Sheet n'est pas accessible publiquement. Passe le partage sur « Toute personne disposant du lien : lecteur ».");
+        return;
+      }
+
       const leitnerData = getLeitnerData();
 
-      allCards = rows.slice(1).map((row) => {
+      const parsed = rows.slice(1).map((row) => {
         if (!Array.isArray(row) || row.length < 1) return null;
 
         const question = sanitizeText(row[0]);
         const leconRaw = sanitizeText(row[1]);
         const reponse = sanitizeText(row[2]) || 'Pas de réponse.';
-        const statut = sanitizeText(row[3]).toUpperCase();
+        const statut = normalizeStatus(row[3]);
         const video = sanitizeText(row[4]);
 
         if (!question || question.toLowerCase() === "questions") return null;
@@ -169,12 +206,23 @@ Papa.parse(SHEET_URL, {
           video: video,
           box: box
         };
-      }).filter(card => {
-        if (!card || !card.q || card.q.length === 0) return false;
-        // Accepte TRUE, OK, VRAI ou 1 dans la colonne Statut
-        const s = card.statut;
-        return s === "TRUE" || s === "OK" || s === "VRAI" || s === "1";
-      });
+      }).filter(card => card && card.q);
+
+      // Filtre sur le statut (avec filet de sécurité)
+      if (REQUIRE_STATUS) {
+        const validated = parsed.filter(c => isValidStatus(c.statut));
+        if (validated.length === 0 && parsed.length > 0) {
+          console.warn("[Flashcards] Aucune carte avec un Statut valide (colonne D). Affichage de toutes les cartes.");
+          allCards = parsed;
+          setTimeout(() => showToast("⚠️ Colonne Statut vide : toutes les cartes affichées"), 300);
+        } else {
+          allCards = validated;
+        }
+      } else {
+        allCards = parsed;
+      }
+
+      console.log("[Flashcards] Cartes chargées :", allCards.length);
 
       if (loadingEl) loadingEl.style.display = 'none';
       appEl?.classList.remove('hidden');
@@ -186,7 +234,8 @@ Papa.parse(SHEET_URL, {
       showError("Erreur : " + err.message);
     }
   },
-  error: function() {
+  error: function(err) {
+    console.error("[Flashcards] Erreur de téléchargement :", err);
     showError("Impossible d'accéder au fichier Google Sheets.");
   }
 });
@@ -199,13 +248,13 @@ function showError(msg) {
 
 function updateBoxCounters() {
   const counts = { 1: 0, 2: 0, 3: 0 };
-  
-  const filtered = selectedTheme === "ALL" 
-    ? allCards 
+
+  const filtered = selectedTheme === "ALL"
+    ? allCards
     : allCards.filter(c => Array.isArray(c.themeArray) && c.themeArray.includes(selectedTheme));
 
-  filtered.forEach(c => { 
-    if (counts[c.box] !== undefined) counts[c.box]++; 
+  filtered.forEach(c => {
+    if (counts[c.box] !== undefined) counts[c.box]++;
   });
 
   for (let i = 1; i <= 3; i++) {
@@ -217,7 +266,7 @@ function updateBoxCounters() {
 function filterAndSelectDeck() {
   currentDeck = allCards.filter(c => {
     const matchBox = c.box === activeBox;
-    const matchTheme = (selectedTheme === "ALL") || 
+    const matchTheme = (selectedTheme === "ALL") ||
                        (Array.isArray(c.themeArray) && c.themeArray.includes(selectedTheme));
     return matchBox && matchTheme;
   });
@@ -238,11 +287,11 @@ function onThemeChange() {
 }
 
 function shuffleDeck() {
-  if (currentDeck.length <= 1) return;  
+  if (currentDeck.length <= 1) return;
   for (let i = currentDeck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [currentDeck[i], currentDeck[j]] = [currentDeck[j], currentDeck[i]];
-  }  
+  }
   showToast("🔀 Paquet mélangé !");
   showCard(0);
 }
@@ -251,8 +300,7 @@ function showCard(index) {
   if (currentDeck.length === 0) {
     if (cardQuestion) cardQuestion.textContent = `Aucune carte disponible.`;
     if (cardResponse) cardResponse.textContent = "";
-    if (cardLesson) cardLesson.textContent = "Leçon --";
-    if (cardTheme) cardTheme.textContent = "Thème --";
+    if (cardLesson) cardLesson.innerHTML = "";
     if (counterEl) counterEl.textContent = "0 / 0";
     answerSection?.classList.add('hidden');
     srsPanel?.classList.add('hidden');
@@ -272,8 +320,15 @@ function showCard(index) {
     renderMath(cardQuestion);
   }
 
-  if (cardLesson) cardLesson.textContent = card.lecon;
-  if (cardTheme) cardTheme.textContent = card.theme;
+  if (cardLesson) {
+    cardLesson.innerHTML = "";
+    card.lecon.split(" | ").forEach(title => {
+      const badge = document.createElement('span');
+      badge.className = 'badge-lesson';
+      badge.textContent = title;
+      cardLesson.appendChild(badge);
+    });
+  }
 
   if (cardResponse) {
     cardResponse.innerHTML = card.r;

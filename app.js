@@ -138,7 +138,7 @@ Papa.parse(SHEET_URL, {
 
         if (!question || question.toLowerCase() === "questions") return null;
 
-        // Extraction tolérante des numéros de leçons
+        // Extraction des numéros de leçons
         const matches = leconRaw.match(/\d+/g);
         const leconNums = matches ? matches.map(n => parseInt(n, 10)) : [];
 
@@ -172,7 +172,7 @@ Papa.parse(SHEET_URL, {
       }).filter(card => 
         card !== null && 
         card.q.length > 0 && 
-        card.statut === "OK" // Re-filtrage strict : uniquement les cartes validées avec OK
+        card.statut === "OK" // Filtrage ultra-strict sur OK
       );
 
       if (loadingEl) loadingEl.style.display = 'none';

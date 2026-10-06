@@ -115,7 +115,7 @@ function renderMath(element) {
 
 Papa.parse(SHEET_URL, {
   download: true,
-  header: true, // Utilisation dynamique des en-têtes de colonnes
+  header: true,
   skipEmptyLines: true,
   complete: function(results) {
     try {
@@ -128,12 +128,11 @@ Papa.parse(SHEET_URL, {
       const leitnerData = getLeitnerData();
 
       allCards = rows.map((row) => {
-        // Recherche souple des clés d'en-tête (indépendamment de la casse)
         const keys = Object.keys(row);
         const qKey = keys.find(k => k.toLowerCase().includes('question')) || keys[0];
         const lKey = keys.find(k => k.toLowerCase().includes('leçon') || k.toLowerCase().includes('lecon')) || keys[1];
         const rKey = keys.find(k => k.toLowerCase().includes('réponse') || k.toLowerCase().includes('reponse')) || keys[2];
-        const sKey = keys.find(k => k.toLowerCase().includes('statut') || k.toLowerCase() === 'ok') || keys[3];
+        const sKey = keys.find(k => k.toLowerCase().includes('statut') || k.toLowerCase().includes('ok') || k.toLowerCase().includes('valide')) || keys[3];
         const vKey = keys.find(k => k.toLowerCase().includes('vidéo') || k.toLowerCase().includes('video')) || keys[4];
 
         const question = sanitizeText(row[qKey]);
@@ -178,7 +177,7 @@ Papa.parse(SHEET_URL, {
       }).filter(card => 
         card !== null && 
         card.q.length > 0 && 
-        card.statut === "OK" // Uniquement les lignes marquées OK dans la colonne Statut
+        (card.statut === "TRUE" || card.statut === "OK") // Vérifie la case à cocher (TRUE) ou OK
       );
 
       if (loadingEl) loadingEl.style.display = 'none';

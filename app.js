@@ -138,7 +138,7 @@ Papa.parse(SHEET_URL, {
 
         if (!question || question.toLowerCase() === "questions") return null;
 
-        // Extraction ultra-blindée : isole tous les nombres isolés par des virgules ou espaces
+        // Extraction tolérante des numéros de leçons
         const matches = leconRaw.match(/\d+/g);
         const leconNums = matches ? matches.map(n => parseInt(n, 10)) : [];
 
@@ -169,7 +169,11 @@ Papa.parse(SHEET_URL, {
           video: video,
           box: box
         };
-      }).filter(card => card !== null && card.q.length > 0);
+      }).filter(card => 
+        card !== null && 
+        card.q.length > 0 && 
+        card.statut === "OK" // Re-filtrage strict : uniquement les cartes validées avec OK
+      );
 
       if (loadingEl) loadingEl.style.display = 'none';
       appEl?.classList.remove('hidden');

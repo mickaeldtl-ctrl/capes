@@ -115,30 +115,36 @@ function renderMath(element) {
 
 Papa.parse(SHEET_URL, {
   download: true,
-  header: false,
+  header: true, // Utilisation dynamique des en-têtes de colonnes
   skipEmptyLines: true,
   complete: function(results) {
     try {
       const rows = results.data;
-      if (!rows || rows.length <= 1) {
+      if (!rows || rows.length === 0) {
         showError("Aucune donnée trouvée.");
         return;
       }
 
       const leitnerData = getLeitnerData();
 
-      allCards = rows.slice(1).map((row) => {
-        if (!Array.isArray(row) || row.length < 1) return null;
+      allCards = rows.map((row) => {
+        // Recherche souple des clés d'en-tête (indépendamment de la casse)
+        const keys = Object.keys(row);
+        const qKey = keys.find(k => k.toLowerCase().includes('question')) || keys[0];
+        const lKey = keys.find(k => k.toLowerCase().includes('leçon') || k.toLowerCase().includes('lecon')) || keys[1];
+        const rKey = keys.find(k => k.toLowerCase().includes('réponse') || k.toLowerCase().includes('reponse')) || keys[2];
+        const sKey = keys.find(k => k.toLowerCase().includes('statut') || k.toLowerCase() === 'ok') || keys[3];
+        const vKey = keys.find(k => k.toLowerCase().includes('vidéo') || k.toLowerCase().includes('video')) || keys[4];
 
-        const question = sanitizeText(row[0]);
-        const leconRaw = sanitizeText(row[1]);
-        const reponse = sanitizeText(row[2]) || 'Pas de réponse.';
-        const statut = sanitizeText(row[3]).toUpperCase();
-        const video = sanitizeText(row[4]);
+        const question = sanitizeText(row[qKey]);
+        const leconRaw = sanitizeText(row[lKey]);
+        const reponse = sanitizeText(row[rKey]) || 'Pas de réponse.';
+        const statut = sanitizeText(row[sKey]).toUpperCase();
+        const video = sanitizeText(row[vKey]);
 
         if (!question || question.toLowerCase() === "questions") return null;
 
-        // Extraction des numéros de leçons
+        // Extraction tolérante des numéros de leçons
         const matches = leconRaw.match(/\d+/g);
         const leconNums = matches ? matches.map(n => parseInt(n, 10)) : [];
 
@@ -172,7 +178,7 @@ Papa.parse(SHEET_URL, {
       }).filter(card => 
         card !== null && 
         card.q.length > 0 && 
-        card.statut === "OK" // Filtrage ultra-strict sur OK
+        card.statut === "OK" // Uniquement les lignes marquées OK dans la colonne Statut
       );
 
       if (loadingEl) loadingEl.style.display = 'none';

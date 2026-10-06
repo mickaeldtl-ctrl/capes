@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <title>Flashcards CAPES Mathématiques</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  
+
   <!-- Parser CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
@@ -18,10 +22,7 @@
 
   <div class="app-container">
     <header class="app-header">
-      <div class="brand">
-        <span class="logo-icon">📐</span>
-        <h1>Flashcards CAPES</h1>
-      </div>
+      <h1>Flashcards CAPES <span class="subtitle">Mathématiques</span></h1>
     </header>
 
     <!-- Écran de chargement -->
@@ -32,23 +33,26 @@
 
     <!-- Application principale -->
     <main id="flashcardApp" class="hidden">
-      
-      <!-- Onglets des 3 boîtes Leitner -->
+
+      <!-- Boîtes Leitner -->
       <div class="boxes-bar">
-        <button class="box-tab active" id="box-tab-1" onclick="selectBox(1)">
-          B1 (<span id="box-count-1">0</span>)
+        <button class="box-tab box-1 active" id="box-tab-1" onclick="selectBox(1)">
+          <span class="box-name">Boîte 1</span>
+          <span class="box-count" id="box-count-1">0</span>
         </button>
-        <button class="box-tab" id="box-tab-2" onclick="selectBox(2)">
-          B2 (<span id="box-count-2">0</span>)
+        <button class="box-tab box-2" id="box-tab-2" onclick="selectBox(2)">
+          <span class="box-name">Boîte 2</span>
+          <span class="box-count" id="box-count-2">0</span>
         </button>
-        <button class="box-tab" id="box-tab-3" onclick="selectBox(3)">
-          B3 (<span id="box-count-3">0</span>)
+        <button class="box-tab box-3" id="box-tab-3" onclick="selectBox(3)">
+          <span class="box-name">Boîte 3</span>
+          <span class="box-count" id="box-count-3">0</span>
         </button>
       </div>
 
-      <!-- Barre d'outils (Filtre par thème + Mélanger + RàZ) -->
+      <!-- Filtre + actions -->
       <div class="controls-bar">
-        <select id="themeFilter" class="filter-select" onchange="onThemeChange()">
+        <select id="themeFilter" class="filter-select" onchange="onThemeChange()" aria-label="Filtrer par thème">
           <option value="ALL">Tous les thèmes</option>
           <option value="Dénombrements, proba, stats">Dénombrements, proba, stats</option>
           <option value="Arithmétique">Arithmétique</option>
@@ -61,14 +65,17 @@
           <option value="Méthodologie & Modélisation">Méthodologie & Modélisation</option>
         </select>
 
-        <button id="shuffleBtn" class="action-btn" onclick="shuffleDeck()" title="Mélanger le paquet">
-          🔀 Mélanger
+        <button id="shuffleBtn" class="icon-btn" onclick="shuffleDeck()" title="Mélanger le paquet" aria-label="Mélanger le paquet">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="m4 4 5 5"/></svg>
+        </button>
+
+        <button id="resetSrsBtn" class="icon-btn icon-danger" title="Remettre toutes les cartes en Boîte 1" aria-label="Réinitialiser les boîtes">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
       </div>
 
       <div class="deck-bar">
         <span id="counter" class="counter-badge">Carte 0 / 0</span>
-        <button id="resetSrsBtn" class="action-btn text-danger">🔄 RàZ Boîtes</button>
       </div>
 
       <div class="card-deck">
@@ -80,15 +87,15 @@
 
           <div class="card-content">
             <div class="question-section">
-              <span class="section-label">QUESTION</span>
+              <span class="section-label">Question</span>
               <div class="question-text" id="cardQuestion">Chargement...</div>
             </div>
 
             <div id="answerSection" class="answer-section hidden">
               <hr class="divider">
-              <span class="section-label">RÉPONSE / DÉMONSTRATION</span>
+              <span class="section-label">Réponse</span>
               <div class="answer-text" id="cardResponse"></div>
-              
+
               <div id="cardVideoContainer" class="video-box hidden">
                 <a id="cardVideo" href="#" target="_blank" rel="noopener noreferrer" class="video-btn">
                   ▶ Voir la vidéo explicative
@@ -98,29 +105,25 @@
           </div>
 
           <div id="revealContainer" class="reveal-container">
-            <button id="revealBtn" class="btn-reveal">Afficher la réponse (Espace)</button>
+            <button id="revealBtn" class="btn-reveal">Afficher la réponse</button>
           </div>
         </article>
       </div>
 
-      <!-- Module d'évaluation Leitner -->
+      <!-- Évaluation Leitner -->
       <div id="srsPanel" class="srs-container hidden">
-        <p class="srs-instruction">Comment as-tu retenu cette carte ?</p>
         <div class="srs-actions">
           <button id="btnAgain" class="srs-btn btn-again">
-            <span class="srs-emoji">🔴</span>
             <span class="srs-title">À revoir</span>
-            <span class="srs-time">Retour B1</span>
+            <span class="srs-time">Retour boîte 1</span>
           </button>
           <button id="btnHard" class="srs-btn btn-hard">
-            <span class="srs-emoji">🟠</span>
             <span class="srs-title">Difficile</span>
-            <span class="srs-time">Maintien</span>
+            <span class="srs-time">Reste ici</span>
           </button>
           <button id="btnEasy" class="srs-btn btn-easy">
-            <span class="srs-emoji">🟢</span>
             <span class="srs-title">Facile</span>
-            <span class="srs-time">Boîte +1</span>
+            <span class="srs-time">Boîte suivante</span>
           </button>
         </div>
       </div>
